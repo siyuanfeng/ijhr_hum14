@@ -1,0 +1,5 @@
+latex ijhr_hum14.tex
+bibtex ijhr_hum14.aux
+batex ijhr_hum14.tex
+dvips ijhr_hum14.dvi
+ps2pdf ijhr_hum14.ps

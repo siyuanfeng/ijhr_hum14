@@ -201,8 +201,8 @@ and minimized a combination of costs. $q$ was computed by integrating $\dot{q}$.
 Our IK approach was similar in spirit to the work by Mistry et al.\cite{mistry_ik} 
 Solving for $\dot{q}$ and integrating to obtain $q$ was the primary difference
 between our approach and most traditional IK approaches \cite{kajita03,asimo}. 
-The incremental method can get stuck in local minima, but its fast computation
-is suitable for real time control purposes. 
+The incremental method can get stuck in local minima, but faster computation
+is more suitable for real time control purposes. 
 This formulation also fitted nicely with the tel-operation heavy paradigm we 
 adopted for the Trials. 
 
@@ -562,16 +562,18 @@ not affected since target contact acceleration is always set to zero in \eref{eq
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Applications}
 \label{sec:trials_tasks}
-The proposed full body controller is tested on Boston Dynamics's Atlas robot in 
-the DARPA Robotics Challenge. Atlas has 28 hydraulic actuators, six for each leg 
-and arm, three for the back joints, and one for neck pitch. Our rough terrain walking, 
-ladder climbing and full body manipulation controllers are all targeted for it. 
-For all three applications, the state estimator is based on \cite{xinji}.
+The proposed full body controller was tested on Boston Dynamics's Atlas robot,
+which has 28 hydraulic actuators, six for each leg and arm, three for the back 
+joints, and one for neck pitch. 
+The controller was used for the rough terrain walking, ladder climbing
+and manipulation tasks in the DARPA Robotics Challenge Trials in December 2013. 
+For all three applications, the state estimator was based on the work of 
+Xinjilefu et al. \cite{xinji}.
 
 \subsection{Static walking}
 \label{sec:static_walking}
 For the DRC Trials, we used a simple static walking strategy. 
-Desired CoM motion is represented with a quintic spline. Swing foot trajectory 
+Desired CoM motioni is represented with a quintic spline. Swing foot trajectory 
 is generated with piecewise splines. 
 \fref{fig:terrain_pic} shows snapshots of the Atlas robot traversing piled cinder
 blocks with tilted tops, and CoM and feet trajectories are plotted in 
@@ -615,23 +617,7 @@ foot step planner,
 $x_{swing}$ is 
 the computed position from forward kinematics, and $x_{swing_d}^*$ is used 
 as inputs in \eref{eq:id_cart_pd} and \eref{eq:ik_cart_pd}. 
- 
-%\subsubsection{Desired stance foot position in IK}
-%Since we only set IK's internal states to the measure states once during 
-%initialization, plus the presence of inevitable tracking errors and state 
-%estimator drift, the state estimator's and IK's internal world frame will 
-%diverge eventually. To solve this issue, we ``leaky'' integrate the desired 
-%stance foot position $x_{stance_d}^*$ towards the measured. Since IK will 
-%track the desired foot position as closely as possible, we can use 
-%$x_{stance_d}^*$ to update IK's internal world frame to match the state 
-%estimator's. 
-%\begin{equation*}
-%  x_{stance_d}^* = \alpha x_{stance} + (1-\alpha)x_{stance_d}^*,
-%\end{equation*}
-%where $x_{stance}$ is the measured stance foot position using forward 
-%kinematics, and $x_{stance_d}^*$ is input to IK. ID is not affected since it 
-%ignores this term.
- 
+
 \subsubsection{Toe-off}
 For static walking, the CoM needs to be completely shifted to the next stance foot 
 during double support. When taking longer strides or stepping to a greater height,
@@ -666,8 +652,6 @@ around the pitch axis. A slightly bent rear knee angle is given as desired in
 \label{sec:com_int}
 Assuming the robot is moving slowly enough, we can approximate the true CoM 
 with the measured CoP, and compute $CoM_{err} = CoP - CoM_{model}$.
-%For some configuration, we have measured $CoM_{err}$ up to 4$cm$ in the lateral 
-%direction. 
 During the second half of double support and single support phase, 
 we integrate $CoM_{err}$ to offset the desired CoM so that the true CoM is at 
 the middle of the supporting foot. 
@@ -980,8 +964,8 @@ We are actively experimenting with explicitly accounting for torque delays in
 our inverse dynamics formulation as well. 
 The current low level controllers are optimizing greedily for the current 
 time step. 
-Including a value function that captures the future cost similar to 
-\cite{scott_qp} is desirable. 
+Including a value function \cite{scott_qp} that captures the future cost is 
+also desirable. 
 
 We hope to increase the overall performance with better models in the near future. 
 All the leg joint level sensing on the Atlas robot such as position, velocity 

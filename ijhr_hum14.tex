@@ -36,7 +36,7 @@
 
 \begin{document}
 
-\markboth{Siyuan Feng, Eric Whitman, X Xinjilefu, Chris Atkeson} {Optimization Based Full Body Control for the Atlas Robot}
+\markboth{S. Feng, E. Whitman, X. Xinjilefu and C. Atkeson}{Optimization Based Full Body Control for the Atlas Robot}
 
 %%%%%%%%%%%%%%%%%%%%% Publisher's Area please ignore %%%%%%%%%%%%%%%
 %
@@ -134,9 +134,10 @@ Dynamics, joint level servos compute valve commands based on
 \end{equation}
 where $q_d, \dot{q}_d, \tau_d$ are desired joint position, velocity and torque,
 $q, \dot{q}, \tau$ are measured, and 
-$c$ contains the constant valve bias term plus some other auxiliary feedback 
-terms. This joint level servo runs at 1$kHz$, while we can update 
-$q_d,\dot{q}_d$ and $\tau_d$ at 333$Hz$. 
+$c$ contains the constant valve bias term plus some other auxiliary feedback
+and feedforward terms. 
+The joint level servos run at 1$kHz$, while $q_d,\dot{q}_d$ and $\tau_d$ can be
+updated at the same frequency.  
 In previous work \cite{stephens_thesis,whitman_thesis,sfeng_online}, 
 we focused on torque control with ID that computes $\tau_d$. 
 To take full advantage of the on-board high bandwidth PD servo, we need to 
@@ -164,7 +165,7 @@ Ott et al. \cite{ott_force_alloc} use simple PD servos to generate a
 desired net ground reaction wrench, which is then distributed among predefined 
 contacts using optimization.
 Ramos et al. \cite{ramos_dyn_walking} solve a smaller QP with decoupled dynamics. 
-A two level optimization setup is presented by Lee et al. \cite{lee_separate_grf} 
+Lee et al. \cite{lee_separate_grf} present a two level optimization setup. 
 The first level optimizes individual ground reaction wrenches and center of pressure
 (CoP) for each contact and the resulting admissible change in centroidal momenta. 
 Then another least square problem is solved for the state acceleration. 
@@ -175,7 +176,7 @@ contact wrenches. Joint torques are then generated with explicit inverse dynamic
 A novel QP solver is implemented by Kuindersma et al. \cite{scott_qp} to exploit
 the observation that inequality constraints rarely change in this context.
 
-During the Trials, we continued to use the same approach to ID that was 
+During the DRC Trials, we continued to use the same approach to ID that was 
 previously developed in our group \cite{stephens_thesis,whitman_thesis,sfeng_online} 
 that is similar to the work by de Lasa et al. \cite{deLasa_hir} and 
 Bouyarmane et al. \cite{bouyarmane_vrc} 
@@ -190,10 +191,10 @@ up computation.
 %but is still solvable in real time with a standard QP solver. 
 
 ID does not generate $q_d$ or $\dot{q}_d$ directly for \eref{eq:servo}.
-For the Trials, we introduced a separate inverse kinematics (IK) controller to
+For the DRC Trials, we introduced a separate inverse kinematics (IK) controller to
 explicitly compute these kinematic references. 
-Our recent work prefers integrating the acceleration computed by ID into 
-desired velocity that properly obeys dynamic constraints.  
+For more dynamic behaviors, our recent work prefers integrating the acceleration
+computed by ID into desired velocity that properly obeys dynamic constraints.  
 Similar to ID, our IK was also formulated as a QP, where the unknowns are the 
 generalized velocities, $\dot{q}$, of the floating base and all the joints. 
 At each time step, we solved for $\dot{q}$ that obeyed kinematic constraints 
@@ -204,19 +205,19 @@ between our approach and most traditional IK approaches \cite{kajita03,asimo}.
 The incremental method can get stuck in local minima, but faster computation
 is more suitable for real time control purposes. 
 This formulation also fitted nicely with the tel-operation heavy paradigm we 
-adopted for the Trials. 
+adopted for the DRC Trials. 
 
 The main contribution of this work is the successful application to a physical 
 system and many modifications of existing techniques, as well as 
-the lessons learned and intellectual challenges. 
+the lessons learned and intellectual challenges from this effort. 
 The remainder of this paper is arranged as follows. 
-\sref{sec:fbc} provides a brief introduction to the general formulation for 
-our ID and IK controller, which are detailed in \sref{sec:ID} and \sref{sec:IK}
+\sref{sec:fbc} provides a brief description of the common formulation for 
+our ID and IK controller, which are then detailed in \sref{sec:ID} and \sref{sec:IK}
 respectively.
 Three applications are shown in \sref{sec:trials_tasks} 
 in the context of the DARPA Robotics Challenge Trials that took place in 
 December 2013. 
-A brief overview of recent work in progress that aims at more dynamic behaviors
+A brief overview of recent work in progress that aims at faster walking 
 is presented in \sref{sec:new_stuff}.
 Finally, discussions and conclusions are provided 
 in \sref{sec:dis} and \sref{sec:conclusion}.
@@ -261,16 +262,16 @@ Each row emphasizes a certain desired behavior with weight, $w_i$.
 \label{sec:ID}
 The equations of motion and the constraint equations for a floating base humanoid 
 robot can be described as
-\begin{equation*}
+\begin{equation}
   \begin{split}
     M(q)\ddot{q} + h(q,\dot{q}) &= S\tau + J^T(q)\lambda \\
     J(q)\ddot{q} + \dot{J}(q,\dot{q})\dot{q} &= \ddot{x},
   \end{split}
-\end{equation*}
-where $(q,\dot{q})$ is the full state of the system including a six DOF floating 
+\end{equation}
+where $(q,\dot{q})$ is the full state of the system including a six DoF floating 
 base, $M(q)$ is the inertia matrix, $h(q,\dot{q})$ 
 is the sum of gravitational, centrifugal and Coriolis forces, $S$ is a selection
-matrix, where the first six rows that correspond to the six DOF floating base are 
+matrix, where the first six rows that correspond to the six DoF floating base are 
 zeros, and the rest form an identity matrix, $\tau$ is a vector of joint torques, 
 $J^T(q)$ is the Jacobian matrix for all the contacts, $\lambda$ is a vector
 of all contact wrenches in the world frame, and $x$ is a vector of  
@@ -298,9 +299,9 @@ We list a few examples of the objectives that can be plugged into the rows of
 \eref{eq:cost}. 
 \subsubsection{Cartesian space acceleration} 
 Since
-\begin{equation*}
+\begin{equation}
   \ddot{x} = J(q)\ddot{q} + \dot{J}(q,\dot{q})\dot{q},
-\end{equation*}
+\end{equation}
 we can penalize deviation from the desired Cartesian acceleration using
 \begin{equation}
   \begin{split}
@@ -357,17 +358,17 @@ For such contact costs, we set $\ddot{x}^* = 0$ in \eref{eq:id_cart_pd}.
 
 \subsubsection{Center of pressure tracking} 
 CoP in the foot frame is
-\begin{equation*}
+\begin{equation}
   p = \begin{bmatrix} -^{b}M_{y} / ^{b}F_{z} \\ ^{b}M_{x} / ^{b}F_{z} \end{bmatrix},
-\end{equation*}
+\end{equation}
 where $^{b}M$ and $^{b}F$ are contact forces and torques in the foot frame.
 We can penalize CoP deviation with
-\begin{equation*}
+\begin{equation}
   \begin{split}
     A_{cop} &= \begin{bmatrix} 0 & 0 & \begin{bmatrix} 0 & 0 & p_x^* & 0 & 1 & 0 \\ 0 & 0 & p_y^* & -1 & 0 & 0 \end{bmatrix} \begin{bmatrix} R & 0 \\ 0 & R \end{bmatrix} \end{bmatrix} \\
     b_{cop} &= 0,
   \end{split}
-\end{equation*}
+\end{equation}
 where $(p_x^*, p_y^*)$ is the desired CoP in the foot frame given by
 a high level controller, and $R$ is the rotation matrix from the world frame to
 the foot frame.
@@ -376,25 +377,26 @@ the foot frame.
 In double support, we specify a desired weight distribution by  
 $w^* = F_{zl} / (F_{zl}+F_{zr})$, where $F_{zl}$ and $F_{zr}$ are the vertical 
 forces at the left and right foot. We add this term to the cost function with
-\begin{equation*}
+\begin{equation}
   \begin{split}
     A_{weigt} &= \begin{bmatrix} 0 & 0 & S_{weight} \end{bmatrix} \\
     b_{weigt} &= 0.
   \end{split}
-\end{equation*}
-$S_{weight}$ is a row vector with zeros, except $S_{weight}(i_{Fzl}) = 1-w^*$ and 
-$S_{weight}(i_{Fzr}) = -w^*$, where $i_{Fzl}$ and $i_{Fzr}$ are indices correspond
-to $Fzl$ and $Fzr$.
+\end{equation}
+$S_{weight}$ is a row vector with zeros, except $S_{weight}(i_{F_{zl}}) = 1-w^*$ and 
+$S_{weight}(i_{F_{zr}}) = -w^*$, where $i_{F_{zl}}$ and $i_{F_{zr}}$ are indices correspond
+to $F_{zl}$ and $F_{zr}$.
 
 \subsubsection{Direct tracking and regularization} 
 We can also directly penalize $\QPx$ from desired values with
 \begin{equation}
   \begin{split}
-    A_{state} &= I \\
-    b_{state} &= \begin{bmatrix} \ddot{q}^* & \tau^* & \lambda^* \end{bmatrix}^T.
+    A_{state} &= W \\
+    b_{state} &= \begin{bmatrix} \ddot{q}^* & \tau^* & \lambda^* \end{bmatrix}^T,
   \end{split}
 	\label{eq:id_reg}
 \end{equation}
+where $W$ is a diagonal weighting matrix. 
 Zero is used if no target value is specified except for the vertical forces, which 
 are regularized using gravitational forces. This term is useful for directly 
 controlling specific joints or contact wrenches. It also regularizes $\QPx$ to make the
@@ -403,12 +405,12 @@ QP problem well conditioned.
 \subsubsection{Change in torques} 
 To avoid high frequency oscillations in torque commands, we penalize changes in 
 $\tau$ with
-\begin{equation*}
+\begin{equation}
   \begin{split}
     A_{d\tau} &= \begin{bmatrix} 0 & I & 0 \end{bmatrix} \\
     b_{d\tau} &= \tau_{prev},
   \end{split}
-\end{equation*} 
+\end{equation} 
 where $\tau_{prev}$ is from the last time step.
 
 %Weights are summarized in \tref{tab:QPparam}. $w_{qdd}$ is for joint acceleration. 
@@ -424,12 +426,12 @@ where $\tau_{prev}$ is from the last time step.
 \eref{eq:eom} is used as equality constraints. Torque limits can be 
 easily added into the inequality constraints. Friction constraints are 
 approximated by
-\begin{equation*}
+\begin{equation}
   \begin{split}
     | ^bF_x | &\leq \mu ^bF_z \\
     | ^bF_y | &\leq \mu ^bF_z. 
   \end{split}
-\end{equation*}
+\end{equation}
 The forces and torques at the feet need to obey CoP constraints,
 %Ankle torques are limited by the normal forces and foot size, which can be written as
 \begin{equation}
@@ -489,20 +491,21 @@ targets, $x^*_d$ and $\dot{x}^*_d$ are different.
 \subsubsection{Direct tracking and regularization} 
 \begin{equation}
   \begin{split}
-    A_{state} &= I \\
+    A_{state} &= W \\
     b_{state} &= \dot{q}^*,
   \end{split}
 	\label{eq:ik_reg}
 \end{equation} 
-where $\dot{q}^*$ can be target joint velocity or 0 for regularization.
+where $W$ is a diagonal weighting matrix, 
+and $\dot{q}^*$ can be target joint velocity or 0 for regularization.
 
 \subsubsection{Change in velocity} 
-\begin{equation*}
+\begin{equation}
   \begin{split}
     A_{d\dot{q}} &= I \\
     b_{d\dot{q}} &= \dot{q}_{prev},
   \end{split}
-\end{equation*} 
+\end{equation} 
 where $\dot{q}_{prev}$ is the result from the previous time step. This 
 term is useful to eliminate high frequency oscillation in the generalized 
 velocities. 
@@ -516,9 +519,9 @@ constraints in Cartesian space.
 %elbows to be within the railings on the ladder. 
 
 The joint limit constraints are 
-\begin{equation*}
+\begin{equation}
   q^- \leq q_{ik} + \dot{q}dt \leq q^+,
-\end{equation*}
+\end{equation}
 where $dt$ is the time step, and $q^-$ and $q^+$ are the upper and lower joint 
 limit. 
 For Cartesian space position constraints, 
@@ -562,26 +565,24 @@ not affected since target contact acceleration is always set to zero in \eref{eq
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Applications}
 \label{sec:trials_tasks}
-The proposed full body controller was tested on Boston Dynamics's Atlas robot,
+The proposed full body controller has been tested on Boston Dynamics's Atlas robot,
 which has 28 hydraulic actuators, six for each leg and arm, three for the back 
 joints, and one for neck pitch. 
 The controller was used for the rough terrain walking, ladder climbing
 and manipulation tasks in the DARPA Robotics Challenge Trials in December 2013. 
 For all three applications, the state estimator was based on the work of 
-Xinjilefu et al. \cite{xinji}.
+Xinjilefu et al. \cite{xinji}
 
 \subsection{Static walking}
 \label{sec:static_walking}
 For the DRC Trials, we used a simple static walking strategy. 
-Desired CoM motioni was represented with a quintic spline. 
+Desired CoM motion was represented with a quintic spline. 
 Swing foot trajectory was generated with piecewise splines. 
-% TODO
 \fref{fig:terrain_pic} shows snapshots of the Atlas robot traversing piled cinder
 blocks with tilted tops, and CoM and feet trajectories are plotted in 
 \fref{fig:walk_com}. 
 The desired CoP trajectory was generated using a Linear Inverted Pendulum 
 Model (LIPM). 
-%TODO
 \fref{fig:walk_cop} shows CoP tracking for the Atlas robot stepping up piled cinder blocks. 
 
 Most other teams at the DRC Trials built a map with laser point clouds and 
@@ -596,7 +597,7 @@ from forward kinematics, and let the operator ``nudge'' the swing foot around
 in Cartesian space by commanding offsets in desired foot position and orientation. 
 Once the operator was satisfied with the foot pose, a ``continue'' command was 
 issued, the robot put the swing foot straight down until ground contact. 
-On the downside, our approach required more (and more difficult) input from 
+On the downside, our approach required more (and more difficult) inputs from 
 the operator, and had much longer single support phase when the operator 
 commands were being issued.
 
@@ -637,18 +638,17 @@ Position terms remained the same.
 For the rotational terms, we first computed
 \begin{equation}
   \begin{split}
-    A^{ID}_{Rot} &= \begin{bmatrix} R J_{rot}(q) & 0 & 0 \end{bmatrix} \\
-		b^{ID}_{Rot} &= R (\ddot{x}^*_{Rot} - \dot{J}_{rot}(q,\dot{q}) \dot{q}) \\
-    A^{IK}_{Rot} &= R J_{rot}(q_{ik}) \\
-    b^{IK}_{Rot} &= R \dot{x}^*_{Rot} \\
+    A^{ID}_{rot} &= \begin{bmatrix} R^T J_{rot}(q) & 0 & 0 \end{bmatrix} \\
+		b^{ID}_{rot} &= R^T (\ddot{x}^*_{rot} - \dot{J}_{rot}(q,\dot{q}) \dot{q}) \\
+    A^{IK}_{rot} &= R^T J_{rot}(q_{ik}) \\
+    b^{IK}_{rot} &= R^T \dot{x}^*_{rot} \\
   \end{split}
 	\label{eq:cart_rot}
 \end{equation}   
-for ID and IK respectively, where $R$ is the rotation matrix from world to foot 
-frame. 
-Only the first and third rows in \eref{eq:cart_rot}, that corresponded to 
+for ID and IK respectively, where $R$ is the orientation of the foot. 
+Only the first and third rows in \eref{eq:cart_rot}, that correspond to 
 roll and yaw motion were added to the cost functions.
-$\ddot{x}^*_{Rot}$ was set to zero, and $\dot{x}^*_{Rot}$ was computed with \eref{eq:leaky}.
+$\ddot{x}^*_{rot}$ was set to zero, and $\dot{x}^*_{rot}$ was computed with \eref{eq:leaky}.
 We also set $d^-_y = d^+_y = 0$ in \eref{eq:id_cop_con}. 
 This effectively turned the rear foot contact into an unactuated pin joint 
 around the pitch axis. 
@@ -657,8 +657,8 @@ A slightly bent rear knee angle was given as desired in \eref{eq:id_reg} and
 
 \subsubsection{Integrator for desired CoM offset}
 \label{sec:com_int}
-Assuming the robot is moving slowly enough, we can approximate the true CoM 
-with the measured CoP, and compute $CoM_{err} = CoP - CoM_{model}$.
+Assuming the robot is moving slowly enough, we approximated the true CoM 
+with the measured CoP, and computed $CoM_{err} = CoP - CoM_{model}$.
 During the second half of double support and single support phase, 
 we integrated $CoM_{err}$ to offset the desired CoM so that the true CoM was at 
 the middle of the supporting foot. 
@@ -675,44 +675,37 @@ The integrator was set up similarly to \eref{eq:int}.
 \end{figure}
 
 %TODO
+% UPDATE FIGURES
 \begin{figure}
   \begin{center}
     \subfigure[Measured feet and CoM trajectories in $XY$ plane for terrain task]
-      {\includegraphics[width=0.45\textwidth]{images/walking_xy.eps} \label{subfig:walking_xy}}
+      {\includegraphics[width=0.48\textwidth]{images/walking_xy_gray.eps} \label{subfig:walking_xy}}
     \subfigure[Measured feet and CoM trajectories in $XZ$ plane for terrain task]
-      {\includegraphics[width=0.45\textwidth]{images/walking_xz.eps} \label{subfig:walking_xz}} 
+      {\includegraphics[width=0.48\textwidth]{images/walking_xz_gray.eps} \label{subfig:walking_xz}} 
     \caption{                    
-      These plots show the Atlas robot traversing segment 3 of the terrain 
+      These plots show the Atlas robot traversing the third segment of the terrain 
       task. 
       $X$ axis is the forward direction, $Y$ points to the robot's left, and
       $Z$ points upward. 
-      Left and right foot positions are shown with red and green 
-      lines, and center of mass is plotted in blue. The robot walks in a 
-      straight line in reality. Without external observation, our state estimator
-      drifts significantly as shown in the top plot.
-      }\label{fig:walk_com} 
+      The robot walked in a straight line in reality. 
+			Without external observation, our state estimator drifted significantly.
+			}\label{fig:walk_com} 
   \end{center}
 \end{figure}     
 
 %TODO
 \begin{figure}
   \begin{center}
-    \subfigure[CoP in X axis]
-      {\includegraphics[width=.45\textwidth]{images/cop_x.eps} \label{subfig:atlas_cop_x}}
-    \subfigure[CoP in Y axis]
-      {\includegraphics[width=0.45\textwidth]{images/cop_y.eps} \label{subfig:atlas_cop_y}}
+    %\subfigure[CoP in X axis]
+      %{\includegraphics[width=.45\textwidth]{images/cop_x.eps} \label{subfig:atlas_cop_x}}
+    %\subfigure[CoP in Y axis]
+      %{\includegraphics[width=0.45\textwidth]{images/cop_y.eps} \label{subfig:atlas_cop_y}}
+    \includegraphics[width=0.9\textwidth]{images/cop_gray.eps} 
     %\subfigure[Root position in Z axis]
     %  {\includegraphics[width=0.45\textwidth]{images/atlas_z.png} \label{subfig:atlas_pelv_z}}
-    \caption{The top plot shows CoP in the X (forward) direction, the middle plot 
-      shows CoP in the Y (side) direction, and the bottom plot shows
-      Z (vertical positions). This data was collected when the robot was 
-      stepping up the cinder block piles. Measured CoP is plotted in solid blue.
-      Desired CoP given by the high level controller is shown with dashed green. ID's 
-      output CoP is shown with solid red. These traces are very similar.
-      Cyan and magenta lines represent 
-      left and right foot position computed through forward kinematics 
-      respectively. CoP tracking is within 1$cm$. }
-      %The last row shows pelvis height
+    \caption{
+      This plot shows CoP tracking when Atlas was stepping up tilted cinder blocks.}
+			%The last row shows pelvis height
       %tracking. Measured root height (state estimator's pelvis position) is 
       %shown in solid blue line. Input to IK is shown in dashed green, and IK's 
       %result is plotted in solid red. 
@@ -742,24 +735,18 @@ The integrator was set up similarly to \eref{eq:int}.
 \end{figure}    
 
 % TODO
+% more visible plots
 \begin{figure}
   \begin{center}
     \subfigure[Measured limb and CoM trajectories in the $XZ$ plane]
-      {\includegraphics[width=0.45\textwidth]{images/ladder_xz.eps} \label{subfig:ladder_xz}}
+      {\includegraphics[width=0.45\textwidth]{images/ladder_xz_gray.eps} \label{subfig:ladder_xz}}
     \subfigure[Measured limb and CoM trajectories in the $YZ$ plane]
-      {\includegraphics[width=0.45\textwidth]{images/ladder_yz.eps} \label{subfig:ladder_yz}} 
+      {\includegraphics[width=0.45\textwidth]{images/ladder_yz_gray.eps} \label{subfig:ladder_yz}} 
     \caption{
       These two plots show the Atlas robot climbing the first five treads during
       the actual run at the DRC Trials. 
       $X$ axis is the forward direction, $Y$ points to the robot's left, and
       $Z$ points upward. 
-      Left and right foot positions are shown with red
-      and green solid lines, and left and right hand positions are plotted in
-      cyan and magenta dashed lines. Center of mass is shown with solid blue 
-      line. While approaching the ladder, the robot has its arms outside of
-      the ladder railings, and we have to first raise both arms all the way up 
-      and around to get them both between the railings. The swinging motions at
-      the beginning of the hand trajectories are results of this motion. 
       }\label{fig:ladder_data} 
   \end{center}
 \end{figure}
@@ -811,7 +798,7 @@ axis normal to the wall.
 Allowing the controller the freedom to rotate around one axis can drastically 
 increase the available workspace. 
 This modification was similar to \eref{eq:cart_rot}. 
-$R$ was constructed from a basis of three orthogonal unit vectors including 
+The rotation was constructed from a basis of three orthogonal unit vectors including 
 the desired free-to-rotate-about axis, and the row that corresponded to the 
 rotation axis was dropped. 
 
@@ -849,7 +836,7 @@ Additionally, periodic updates were less susceptible to the ``chase condition''
 problem described in \sref{sec:chase_condition}. 
 This reorienting served a similar purpose to \eref{eq:leaky}, but for 
 rotation instead of translation. 
-To avoid chase conditions, this modification was disabled if there was not 
+To avoid chase conditions, this modification was disabled if there was no 
 significant (about 20\%) weight on the foot.
 
 \subsubsection{Elbow management}
@@ -933,21 +920,20 @@ For the upper body, desired joint positions are directly specified.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion and future work}
 \label{sec:dis}
-During early robot development before the Trials, we found using ID alone is 
+During early robot development before the DRC Trials, we found using ID alone is 
 insufficient to track the desired motions on the physical robot, especially 
 for the swing leg and arms. 
 For most joints on the Atlas robot, there is about 10$Nm$ friction, which is
 on the same order of torques for tracking joint trajectories when no external
 force is applied.
-Also because joint torques are measured by the pressure difference across piston 
+In addition, joint torques are measured by the pressure difference across piston 
 chambers, even with an accurate mass model and perfect torque tracking, we still
-need to explicitly compensate for friction to achieve good motion tracking
-performance. 
+need to explicitly compensate for friction to achieve good motion tracking.
 Hence, some form of kinematics based control is necessary for the lightly loaded
 joints, such as those on the swing leg and arms.
 Due to the tight time frame for the DRC Trials in December 2013, we introduced
-a separate IK pass as a temporary solution, which was suitable for mostly slow and
-static tasks such as manipulation and ladder climbing in the Trials. 
+a separate IK pass as a temporary solution, which was suitable for slow and
+static tasks such as manipulation and ladder climbing in the DRC Trials. 
 For more dynamic behaviors, inconsistency between ID and IK's solutions became 
 a major issue. 
 Failures occur when IK's solution violates physical dynamic constraints that are 
@@ -963,7 +949,7 @@ integrated into velocities and used as references in the joint level servos.
 We are able to achieve much faster walking speed compared with the previous 
 approach that relied on a separate IK module. 
 
-For the Trials, our static approached allowed us to use various integrators to 
+For the DRC Trials, our static approached allowed us to use various integrators to 
 compensate for modeling errors easily. 
 Being slow also mitigated the effects of all kinds of delays in the system. 
 In the current fast walking controller development, we are exploring ways to 
@@ -986,7 +972,7 @@ All the leg joint level sensing on the Atlas robot such as position, velocity
 (numerically differentiated from position) and torque are pre-transmission. 
 This hardware design choice alleviates jitter in the low level joint control, 
 but introduces problems for forward kinematics and torque control. 
-Unmeasured friction and stiction forces degrade performance of torque control. 
+Friction and stiction forces that are unaccounted for degrade performance of torque control. 
 Better state estimation technology needs to be developed for more accurate 
 kinematic tracking and force control. 
 
@@ -1005,7 +991,7 @@ controller.
 The inverse dynamics module provided more compliant motion and more robustness 
 against external perturbation. 
 The inverse kinematics module helped us battle modeling errors and made rapid 
-real hardware deployment of the controller possible.
+real hardware deployment possible.
 The combined low level controller abstracted away the details about the physical 
 system and provided mechanisms to realize and trade off among potentially 
 conflicting objectives while obeying various constraints. 

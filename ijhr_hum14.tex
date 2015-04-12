@@ -89,7 +89,7 @@ is applied to three tasks in the DARPA Robotics Challenge (DRC) Trials in Dec.
 2013.  
 \end{abstract}
 
-\keywords{Atlas; full body control; inverse dynamics; inverse kinematics;}
+\keywords{Atlas; DARPA Robotics Challenge; full body control; inverse dynamics; inverse kinematics;}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -551,6 +551,7 @@ ladder climbing and full body manipulation controllers are all targeted for it.
 For all three applications, the state estimator is based on \cite{xinji}.
 
 \subsection{Static walking}
+\label{sec:static_walking}
 For the DRC Trials, we used a simple static walking strategy. 
 Desired CoM motion is represented with a quintic spline. Swing foot trajectory 
 is generated with piecewise splines. 
@@ -871,25 +872,60 @@ arms to pull or push the CoM into the desired position. To avoid unintentionally
 rotating the robot, this integrator is only active while both hands are in 
 contact with the rung. 
 
+\subsection{Towards faster walking}
+Although ID was helpful for balancing, the walking controller presented in 
+\sref{sec:static_walking} was essentially kinematics driven. 
+For slow static walking, the controller hardly run into dynamic constraints, 
+which allowed us to use a separate IK module to generate desired joint 
+positions and velocities. 
+As we aim for more dynamic behaviors, these kinematic references need to be 
+compatible with the dynamic constraints. 
+
+Since the DRC trials, we have developed a new controller based on previous 
+work \cite{sfeng_online} that is capable of more dynamic walking for the Atlas
+robot. The new walking controller is able to achieve 1.7$s$ cadence and 0.4$m$
+step length as shown in \fref{fig:fast_walking}. 
+The new approach consists of a high level trajectory optimizer that generates
+reference CoM and swing foot trajectories using the desired footsteps at a low
+frequency, and a full body controller that tracks the reference trajectories 
+on every control cycle. 
+The new full body controller no longer runs a separate IK module. 
+Lower body joint level servos consist of only velocity and torque feedback 
+loops. 
+Desired torque comes straight from the output of ID, and desired velocity is 
+leaky integrated by
+\begin{equation}
+  \dot{q}_d^* = \alpha (\dot{q}_d^* + \ddot{q}_d dt) + (1-\alpha) \dot{q}_d,
+	\label{eq:qd_int},
+\end{equation} 
+where $\ddot{q}_d$ is the acceleration computed by ID, and $\alpha = 0.99$. 
+The velocity loop is necessary for swing leg tracking. 
+For the upper body, desired joint positions are directly specified.
+
+\begin{figure} 
+  \begin{center}
+    {\includegraphics[width=0.9\textwidth]{images/fast_walking.eps}}
+    \caption{Atlas walks at 1.7$s$ cadence and 0.4$m$ step length with the
+		new walking controller.} \label{fig:fast_walking}
+  \end{center}
+\end{figure}   
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion and future work}
-%We have demonstrated effective applications for the proposed controller on the 
-%Atlas robot. On top of which, we develop several task level controllers for 
-%different tasks simultaneously. All task level controllers and the full body 
-%controller are developed and tested within three months. 
-%Part of our future work is deeper analysis of the stability of the dynamics 
-%equations, especially in the presence of 
 During early development on the real robot, we found using ID alone is 
 insufficient to generate the desired motions on the physical robot, especially 
 for the swing leg and arms. 
 We attribute this to modeling errors and joint stiction and friction.
 Some control based on kinematics is necessary to achieve accurate foot and hand 
-placement. We have briefly experimented with naively integrating desired accelerations 
+placement. 
+
+We have briefly experimented with naively integrating desired accelerations 
 from ID into desired velocity and position, which resulted in unstable overall 
 behaviors. We did not investigate this further for the sake of development time, but 
 we observed qualitatively the same behaviors in simulation when 20$ms$ delays 
 of the torque command were added.
+
 Thus, a separate IK pass was introduced as a temporary solution. 
 Inconsistency between ID and IK solutions becomes our major concern. 
 A failure mode that we have observed is due to IK and ID having separate constraints. For 
@@ -903,21 +939,6 @@ acceleration. We think one approach to resolve this issue is to replace our
 current ID/IK combination with Receding Horizon Control on the full dynamic 
 model similar to \cite{tass_mpc}, which is close to, but not yet, 
 computationally tractable in a real-time setting.
-
-%Empirically, results 
-%from both QP are consistent with each other when the overall controller is 
-%tracking the desired trajectory well, since the high level commands are always 
-%consistent. On the other hand, when either is unable to track the desired 
-%trajectory due to constraint violation, the other is unaware of the 
-%situation. For example, when ID is unable to produce the demanded CoM 
-%acceleration due to limited friction, the CoM will start diverging from the 
-%desired trajectory. However such constraints are not implemented in IK, which 
-%will keep tracking the desired CoM velocity. Once the divergence starts, ID will
-%demand more CoM acceleration because of the increasing tracking errors, which is
-%again unrealistic because of the friction constraints. Since both ID and IK are 
-%local greedy optimizers, they do not have the ability to correct this problem 
-%alone. We expect that a successful approach to this problem will be having the 
-%high level controller foresee and prevent these situations. 
 
 The current implementation works well for static behaviors. Being static allows
 us to use various integrators to compensate for modeling errors easily. It 

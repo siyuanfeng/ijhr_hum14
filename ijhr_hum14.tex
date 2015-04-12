@@ -83,10 +83,12 @@ motions and robustness to external perturbations. However, the performance of
 such methods is heavily dependent on high quality dynamic models, which are 
 often very difficult to produce for a physical robot. IK approaches only 
 require kinematic models, which are much easier to generate in practice. In this 
-paper, we supplement our previous work with ID-based controllers by adding IK, 
-which helps compensate for modeling errors. The proposed full body controller 
-is applied to three tasks in the DARPA Robotics Challenge (DRC) Trials in Dec. 
-2013.  
+paper, we supplemented our previous work with ID-based controllers by adding IK, 
+which helped compensate for modeling errors. The proposed full body controller 
+was applied to three tasks in the DARPA Robotics Challenge (DRC) Trials in December
+2013. A short overview of recent progress towards faster walking is also 
+presented, in which we are exploring alternatives to IK for generating kinematic 
+references that are consistent with dynamic constraints.
 \end{abstract}
 
 \keywords{Atlas; DARPA Robotics Challenge; full body control; inverse dynamics; inverse kinematics;}
@@ -135,81 +137,94 @@ $q, \dot{q}, \tau$ are measured, and
 $c$ contains the constant valve bias term plus some other auxiliary feedback 
 terms. This joint level servo runs at 1$kHz$, while we can update 
 $q_d,\dot{q}_d$ and $\tau_d$ at 333$Hz$. 
-In previous work \cite{stephens_thesis,whitman_thesis,sfeng_online}, we focused on torque control with ID that 
-computes $\tau_d$. To take full advantage of the on-board high bandwidth PD 
-servo, we need to generate reference $q_d$ and $\dot{q}_d$. 
+In previous work \cite{stephens_thesis,whitman_thesis,sfeng_online}, 
+we focused on torque control with ID that computes $\tau_d$. 
+To take full advantage of the on-board high bandwidth PD servo, we need to 
+generate reference $q_d$ and $\dot{q}_d$. 
 
 Using full body inverse dynamics for force control has become a popular topic
-in recent humanoid research. Much of the research originates from \cite{khatib_op_space_ctrl}. 
+in recent humanoid research. Much of the research originates from the 
+operational space formulation \cite{khatib_op_space_ctrl}. 
 Within this broad category, reference motions in task space are specified, 
 and convex optimization is used to handle constraints and solve for controls
 that best track the reference motions. 
 Although detailed formulations differ, most active research has converged to 
 formulating the floating base inverse dynamics as a QP problem. 
-\cite{eth_id,Hutter01052014,alex_hir,saab_fast_hir_qp,deLasa_hir,wensing_hir,sentis_wbc} 
-explore using a hierarchical approach to 
-resolve redundant degrees of freedom in humanoid robots. These approaches
-typically ensure low priority objectives are within the null space of higher
-priority ones. 
+Hierarchical approaches \cite{eth_id,Hutter01052014,alex_hir,saab_fast_hir_qp,deLasa_hir,wensing_hir,sentis_wbc}
+are used to resolve redundant degrees of freedom in humanoid robots. 
+These approaches typically ensure low priority objectives are within the null
+space of higher priority ones. 
 We prefer using soft costs as opposed to hard constraints for better numerical 
 stability especially in situations where no feasible solutions exist for the 
 specified objectives.
 There is also much interest in formulating a smaller QP problem to reduce 
-computation time. Contact forces can be removed from the
+computation time. Contact wrenches can be removed from the
 equations of motion using orthogonal decomposition \cite{usc_id1}.
 Ott et al. \cite{ott_force_alloc} use simple PD servos to generate a 
 desired net ground reaction wrench, which is then distributed among predefined 
 contacts using optimization.
-\cite{ramos_dyn_walking} solves a smaller QP with decoupled dynamics. 
-\cite{lee_separate_grf} has a two stage optimization setup. The first optimizes
-individual ground reaction forces and center of pressure (CoP) for each contact
-and the resulting admissible change in centroidal momenta. Then another least 
-square problem is solved for the state acceleration. Joint torques are 
-generated explicitly. \cite{ihmc_vrc} generates desired centroidal
-momenta change based on instantaneous capture points, and uses QP to optimize 
-for acceleration and contact forces. Joint torques are then generated with 
-explicit inverse dynamics. 
-\cite{scott_qp} is similar in terms of optimization variables and torque 
-generation, but a novel QP solver is implemented to exploit the observation that 
-inequality constraints rarely change in this context.
+Ramos et al. \cite{ramos_dyn_walking} solve a smaller QP with decoupled dynamics. 
+A two level optimization setup is presented by Lee et al. \cite{lee_separate_grf} 
+The first level optimizes individual ground reaction wrenches and center of pressure
+(CoP) for each contact and the resulting admissible change in centroidal momenta. 
+Then another least square problem is solved for the state acceleration. 
+Joint torques are generated explicitly. 
+Koolen et al. \cite{ihmc_vrc} generate desired centroidal momenta change based 
+on instantaneous capture point, and uses QP to optimize for acceleration and 
+contact wrenches. Joint torques are then generated with explicit inverse dynamics. 
+A novel QP solver is implemented by Kuindersma et al. \cite{scott_qp} to exploit
+the observation that inequality constraints rarely change in this context.
 
-We continue to use the same approach to ID that was previously 
-developed in our group \cite{stephens_thesis,whitman_thesis,sfeng_online} 
-that is similar to \cite{deLasa_hir,bouyarmane_vrc}. 
-We optimize for acceleration, torque, and contact forces simultaneously on 
-the full robot model. 
-This design choice is intuitive, and gives us the most
-flexibility in terms of trading off directly among physical quantities of 
-interest. 
-It also provides an easy way to properly manage all constraints on 
-contact forces and joint torques. It does result in a bigger QP problem, 
-but is still solvable in real time with a standard QP solver. 
+During the Trials, we continued to use the same approach to ID that was 
+previously developed in our group \cite{stephens_thesis,whitman_thesis,sfeng_online} 
+that is similar to the work by de Lasa et al. \cite{deLasa_hir} and 
+Bouyarmane et al. \cite{bouyarmane_vrc} 
+We optimized for acceleration, torque, and contact wrenches simultaneously 
+on the full robot model. This design choice was intuitive, and gave us the
+most flexibility in terms of trading off directly among physical quantities
+of interest. Recently, we remove the explicit dependency on joint torques in
+ID using the decoupling presented by Herzog, et al. \cite{alex_hir} to speed
+up computation.
+%It also provides an easy way to properly manage all constraints on 
+%contact wrenches and joint torques. It does result in a bigger QP problem, 
+%but is still solvable in real time with a standard QP solver. 
 
 ID does not generate $q_d$ or $\dot{q}_d$ directly for \eref{eq:servo}.
-We could integrate $\ddot{q}$, the output from ID, into $\dot{q}_d$ and $q_d$, 
-but we find this rapidly leads to joint limit violation and instability 
-due to delays and modeling errors. Thus, a separate inverse kinematics (IK) 
-controller is introduced. 
-Similar to ID, our IK is also formulated as a QP, where the unknowns are the 
+For the Trials, we introduced a separate inverse kinematics (IK) controller to
+explicitly compute these kinematic references. 
+Our recent work prefers integrating the acceleration computed by ID into 
+desired velocity that properly obeys dynamic constraints.  
+Similar to ID, our IK was also formulated as a QP, where the unknowns are the 
 generalized velocities, $\dot{q}$, of the floating base and all the joints. 
-At each time step, we solve for $\dot{q}$ that obeys kinematic constraints 
-and minimizes a combination of costs. $q$ is computed by integrating $\dot{q}$. 
-Our approach is similar in spirit to \cite{mistry_ik}, in which $\dot{q}$ is 
-computed by inverting a matrix composed of end 
-effector and contact constraint Jacobian. 
-Solving for $\dot{q}$ and integrating to obtain $q$ is the primary difference
-between our approach and most traditional IK approaches such as 
-\cite{kajita03,asimo}. 
-The incremental method can get stuck in local minima, but it does not produce 
-discontinuous results. 
+At each time step, we solved for $\dot{q}$ that obeyed kinematic constraints 
+and minimized a combination of costs. $q$ was computed by integrating $\dot{q}$. 
+Our IK approach was similar in spirit to the work by Mistry et al.\cite{mistry_ik} 
+Solving for $\dot{q}$ and integrating to obtain $q$ was the primary difference
+between our approach and most traditional IK approaches \cite{kajita03,asimo}. 
+The incremental method can get stuck in local minima, but its fast computation
+is suitable for real time control purposes. 
+This formulation also fitted nicely with the tel-operation heavy paradigm we 
+adopted for the Trials. 
 
 The main contribution of this work is the successful application to a physical 
 system and many modifications of existing techniques, as well as 
-the lessons learned and intellectual challenges that arise from this endeavor. 
+the lessons learned and intellectual challenges. 
+The remainder of this paper is arranged as follows. 
+\sref{sec:fbc} provides a brief introduction to the general formulation for 
+our ID and IK controller, which are detailed in \sref{sec:ID} and \sref{sec:IK}
+respectively.
+Three applications are shown in \sref{sec:trials_tasks} 
+in the context of the DARPA Robotics Challenge Trials that took place in 
+December 2013. 
+A brief overview of recent work in progress that aims at more dynamic behaviors
+is presented in \sref{sec:new_stuff}.
+Finally, discussions and conclusions are provided 
+in \sref{sec:dis} and \sref{sec:conclusion}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Full body control}
+\label{sec:fbc}
 For many tasks, we specify desired Cartesian motions for specific locations on 
 the robot (e.g. foot, hand and CoM) in the high level controller. 
 The proposed low level controller takes these as inputs, and computes physical 
@@ -243,6 +258,7 @@ $A$ and $b$ can be decomposed into smaller blocks as
 Each row emphasizes a certain desired behavior with weight, $w_i$.
 
 \section{Inverse dynamics}
+\label{sec:ID}
 The equations of motion and the constraint equations for a floating base humanoid 
 robot can be described as
 \begin{equation*}
@@ -381,7 +397,7 @@ We can also directly penalize $\QPx$ from desired values with
 \end{equation}
 Zero is used if no target value is specified except for the vertical forces, which 
 are regularized using gravitational forces. This term is useful for directly 
-controlling specific joints or forces. It also regularizes $\QPx$ to make the
+controlling specific joints or contact wrenches. It also regularizes $\QPx$ to make the
 QP problem well conditioned.
 
 \subsubsection{Change in torques} 
@@ -429,6 +445,7 @@ computed by rotating $\lambda$ into the foot frame.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
 \section{Inverse kinematics}
+\label{sec:IK}
 Unlike traditional IK approaches that generate positions for the entire desired 
 trajectory ahead of time, we compute velocities at each time step and integrate 
 them to get positions. The controller can be more responsive to changes in 
@@ -544,6 +561,7 @@ not affected since target contact acceleration is always set to zero in \eref{eq
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Applications}
+\label{sec:trials_tasks}
 The proposed full body controller is tested on Boston Dynamics's Atlas robot in 
 the DARPA Robotics Challenge. Atlas has 28 hydraulic actuators, six for each leg 
 and arm, three for the back joints, and one for neck pitch. Our rough terrain walking, 
@@ -715,7 +733,7 @@ The integrator is set up similarly to \eref{eq:int}.
 
 \begin{figure}
   \begin{center}
-    {\includegraphics[width=1\textwidth]{images/ladder.eps}}
+    {\includegraphics[width=0.9\textwidth]{images/ladder.eps}}
     \caption{
       These photos show the Atlas robot climbing the top half of the same 
       ladder as used in the DRC Trials. The snapshots were taken every 13 seconds. The
@@ -870,7 +888,8 @@ arms to pull or push the CoM into the desired position. To avoid unintentionally
 rotating the robot, this integrator is only active while both hands are in 
 contact with the rung. 
 
-\subsection{Towards faster walking}
+\section{Towards faster walking}
+\label{sec:new_stuff}
 Although ID was helpful for balancing, the walking controller presented in 
 \sref{sec:static_walking} was essentially kinematics driven. 
 For slow static walking, the controller hardly run into dynamic constraints, 
@@ -894,10 +913,10 @@ loops.
 The desired torque comes straight from the output of ID, and the desired 
 velocity is leaky integrated by
 \begin{equation}
-  \dot{q}_d^* = \alpha (\dot{q}_d^* + \ddot{q}_d dt) + (1-\alpha) \dot{q}_d,
-	\label{eq:qd_int},
+  \dot{q}_d = \alpha (\dot{q}_d + \ddot{q}_d dt) + (1-\alpha) \dot{q},
+	\label{eq:qd_int}
 \end{equation} 
-where $\dot{q}_d^*$ is the desired velocity, $\dot{q}_d$ is the current 
+where $\dot{q}_d$ is the desired velocity, $\dot{q}$ is the current 
 measured velocity, $\ddot{q}_d$ is the acceleration computed by ID, and $\alpha = 0.99$. 
 The velocity loop is necessary for swing leg tracking. 
 For the upper body, desired joint positions are directly specified.
@@ -914,6 +933,7 @@ For the upper body, desired joint positions are directly specified.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion and future work}
+\label{sec:dis}
 During early robot development, we found using ID alone is 
 insufficient to generate the desired motions on the physical robot, especially 
 for the swing leg and arms. 
@@ -976,6 +996,7 @@ kinematic tracking and force control.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Conclusions}
+\label{sec:conclusion}
 We modified previous work to implement the proposed controller on the Atlas 
 robot. 
 Our approach used both inverse dynamics and inverse kinematics in the full body 
@@ -991,7 +1012,7 @@ Our recent development favors an unified full body controller that integrates
 the accelerations from the ID results to generate kinematic references for more 
 dynamic behaviors. 
 For more static tasks such as manipulation, the original IK and ID combination 
-is still preferred for higher kinematic model accuracy.
+is still preferred for more accurate position tracking with the arms.
 
 We had successfully demonstrated our approach on three different challenging 
 real life applications, uneven terrain traversal, ladder climbing, and 

@@ -36,7 +36,7 @@
 
 \begin{document}
 
-\markboth{Insert Authors' Names here}{Optimization Based Full Body Control for the Atlas Robot}
+\markboth{S. Feng, E. Whitman, X. Xinjilefu and C. Atkeson}{Optimization Based Full Body Control for the Atlas Robot}
 
 %%%%%%%%%%%%%%%%%%%%% Publisher's Area please ignore %%%%%%%%%%%%%%%
 %
@@ -686,9 +686,9 @@ The integrator is set up similarly to \eref{eq:int}.
 \begin{figure}
   \begin{center}
     \subfigure[Measured feet and CoM trajectories in $XY$ plane for terrain task]
-      {\includegraphics[width=0.45\textwidth]{images/walking_xy.eps} \label{subfig:walking_xy}}
+      {\includegraphics[width=0.45\textwidth]{images/walking_xy_gray.eps} \label{subfig:walking_xy}}
     \subfigure[Measured feet and CoM trajectories in $XZ$ plane for terrain task]
-      {\includegraphics[width=0.45\textwidth]{images/walking_xz.eps} \label{subfig:walking_xz}} 
+      {\includegraphics[width=0.45\textwidth]{images/walking_xz_gray.eps} \label{subfig:walking_xz}} 
     \caption{                    
       These plots show the Atlas robot traversing segment 3 of the terrain 
       task. 
@@ -704,10 +704,11 @@ The integrator is set up similarly to \eref{eq:int}.
 
 \begin{figure}
   \begin{center}
-    \subfigure[CoP in X axis]
-      {\includegraphics[width=.45\textwidth]{images/cop_x.eps} \label{subfig:atlas_cop_x}}
-    \subfigure[CoP in Y axis]
-      {\includegraphics[width=0.45\textwidth]{images/cop_y.eps} \label{subfig:atlas_cop_y}}
+    %\subfigure[CoP in X axis]
+      %{\includegraphics[width=.45\textwidth]{images/cop_x.eps} \label{subfig:atlas_cop_x}}
+    %\subfigure[CoP in Y axis]
+      %{\includegraphics[width=0.45\textwidth]{images/cop_y.eps} \label{subfig:atlas_cop_y}}
+    \includegraphics[width=0.9\textwidth]{images/cop_gray.eps} 
     %\subfigure[Root position in Z axis]
     %  {\includegraphics[width=0.45\textwidth]{images/atlas_z.png} \label{subfig:atlas_pelv_z}}
     \caption{The top plot shows CoP in the X (forward) direction, the middle plot 
@@ -750,9 +751,9 @@ The integrator is set up similarly to \eref{eq:int}.
 \begin{figure}
   \begin{center}
     \subfigure[Measured limb and CoM trajectories in the $XZ$ plane]
-      {\includegraphics[width=0.45\textwidth]{images/ladder_xz.eps} \label{subfig:ladder_xz}}
+      {\includegraphics[width=0.45\textwidth]{images/ladder_xz_gray.eps} \label{subfig:ladder_xz}}
     \subfigure[Measured limb and CoM trajectories in the $YZ$ plane]
-      {\includegraphics[width=0.45\textwidth]{images/ladder_yz.eps} \label{subfig:ladder_yz}} 
+      {\includegraphics[width=0.45\textwidth]{images/ladder_yz_gray.eps} \label{subfig:ladder_yz}} 
     \caption{
       These two plots show the Atlas robot climbing the first five treads during
       the actual run at the DRC Trials. 
@@ -1031,7 +1032,151 @@ Challenge programs.
  
 \bibliographystyle{ieeetr}
 
-\bibliography{sfeng}
+\begin{thebibliography}{10}
+
+\bibitem{stephens_thesis}
+B.~Stephens, {\em Push Recovery Control for Force-Controlled Humanoid Robots}.
+\newblock PhD thesis, Robotics Institute, Carnegie Mellon University,
+  Pittsburgh, PA, May 2011.
+
+\bibitem{whitman_thesis}
+E.~Whitman, {\em Coordination of Multiple Dynamic Programming Policies for
+  Control of Bipedal Walking}.
+\newblock PhD thesis, Robotics Institute, Carnegie Mellon University,
+  Pittsburgh, PA, USA, September 2013.
+
+\bibitem{sfeng_online}
+S.~Feng, X.~Xinjilefu, W.~Huang, and C.~Atkeson, {3D} walking based on online
+  optimization, in {\em Humanoid Robots (Humanoids), 2013 13th IEEE-RAS
+  International Conference on}, (Atlanta, GA, USA), 2013.
+
+\bibitem{khatib_op_space_ctrl}
+O.~Khatib, A unified approach for motion and force control of robot
+  manipulators: The operational space formulation, {\em Robotics and
+  Automation, IEEE Journal of}, vol.~3, pp.~43--53, February 1987.
+
+\bibitem{eth_id}
+M.~Hutter, M.~A. Hoepflinger, C.~Gehring, M.~Bloesch, C.~D. Remy, and
+  R.~Siegwart, Hybrid operational space control for compliant legged
+  systems, in {\em Robotics: Science and Systems (RSS)}, (Sydney, NSW,
+  Australia), July 2012.
+
+\bibitem{Hutter01052014}
+M.~Hutter, H.~Sommer, C.~Gehring, M.~Hoepflinger, M.~Bloesch, and R.~Siegwart,
+  Quadrupedal locomotion using hierarchical operational space control, {\em
+  The International Journal of Robotics Research}, vol.~33, no.~8,
+  pp.~1047--1062, 2014.
+
+\bibitem{alex_hir}
+A.~Herzog, L.~Righetti, F.~Grimminger, P.~Pastor, and S.~Schaal, Balancing
+  experiments on a torque-controlled humanoid with hierarchical inverse
+  dynamics, in {\em Intelligent Robots and Systems (IROS), 2014 IEEE/RSJ
+  International Conference on}, (Chicago, IL, USA), Sept 2014.
+
+\bibitem{saab_fast_hir_qp}
+L.~Saab, O.~Ramos, F.~Keith, N.~Mansard, P.~Soueres, and J.~Fourquet, Dynamic
+  whole-body motion generation under rigid contacts and other unilateral
+  constraints, {\em Robotics, IEEE Transactions on}, vol.~29, pp.~346--362,
+  April 2013.
+
+\bibitem{deLasa_hir}
+M.~de~Lasa, I.~Mordatch, and A.~Hertzmann, Feature-based locomotion
+  controllers, {\em ACM Trans. Graph.}, vol.~29, pp.~131:1--131:10, July
+  2010.
+
+\bibitem{wensing_hir}
+P.~Wensing and D.~Orin, Generation of dynamic humanoid behaviors through
+  task-space control with conic optimization, in {\em Robotics and Automation
+  (ICRA), 2013 IEEE International Conference on}, (Karlsruhe, Germany),
+  pp.~3103--3109, May 2013.
+
+\bibitem{sentis_wbc}
+L.~Sentis and O.~Khatib, A whole-body control framework for humanoids
+  operating in human environments, in {\em Robotics and Automation, 2006.
+  ICRA 2006. Proceedings 2006 IEEE International Conference on}, (Orlando, FL,
+  USA), pp.~2641--2648, May 2006.
+
+\bibitem{usc_id1}
+L.~Righetti, J.~Buchli, M.~Mistry, M.~Kalakrishnan, and S.~Schaal, Optimal
+  distribution of contact forces with inverse-dynamics control, {\em The
+  International Journal of Robotics Research}, vol.~32, no.~3, pp.~280--298,
+  2013.
+
+\bibitem{ott_force_alloc}
+C.~Ott, M.~Roa, and G.~Hirzinger, Posture and balance control for biped
+  robots based on contact force optimization, in {\em Humanoid Robots
+  (Humanoids), 2011 11th IEEE-RAS International Conference on}, (Bled,
+  Slovenia), pp.~26--33, Oct 2011.
+
+\bibitem{ramos_dyn_walking}
+O.~Ramos, N.~Mansard, O.~Stasse, and P.~Soueres, Walking on non-planar
+  surfaces using an inverse dynamic stack of tasks, in {\em Humanoid Robots
+  (Humanoids), 2012 12th IEEE-RAS International Conference on}, (Osaka, Japan),
+  pp.~829--834, Nov 2012.
+
+\bibitem{lee_separate_grf}
+S.-H. Lee and A.~Goswami, Ground reaction force control at each foot: A
+  momentum-based humanoid balance controller for non-level and non-stationary
+  ground, in {\em Intelligent Robots and Systems (IROS), 2010 IEEE/RSJ
+  International Conference on}, (Taipei, China), pp.~3157--3162, Oct 2010.
+
+\bibitem{ihmc_vrc}
+T.~Koolen, J.~Smith, G.~Thomas, S.~Bertrand, J.~Carff, N.~Mertins, D.~Stephen,
+  P.~Abeles, J.~Englsberger, S.~McCrory, J.~van Egmond, M.~Griffioen, M.~Floyd,
+  S.~Kobus, N.~Manor, S.~Alsheikh, D.~Duran, L.~Bunch, E.~Morphis,
+  L.~Colasanto, K.-L.~H. Hoang, B.~Layton, P.~Neuhaus, M.~Johnson, , and
+  J.~Pratt, Summary of {Team} {IHMC’s} {Virtual Robotics Challenge}
+  entry, in {\em Humanoid Robots (Humanoids), 2013 13th IEEE-RAS
+  International Conference on}, (Atlanta, GA, USA), 2013.
+
+\bibitem{scott_qp}
+S.~Kuindersma, F.~Permenter, and R.~Tedrake, An efficiently solvable
+  quadratic program for stabilizing dynamic locomotion, in {\em Robotics and
+  Automation, 2014. ICRA '14. IEEE International Conference on}, (Hong Kong,
+  China), 2014.
+
+\bibitem{bouyarmane_vrc}
+K.~Bouyarmane, J.~Vaillant, F.~Keith, and A.~Kheddar, Exploring humanoid
+  robots locomotion capabilities in virtual disaster response scenarios, in
+  {\em Humanoid Robots (Humanoids), 2012 12th IEEE-RAS International Conference
+  on}, (Osaka, Japan), pp.~337--342, Nov 2012.
+
+\bibitem{mistry_ik}
+M.~Mistry, J.~Nakanishi, G.~Cheng, and S.~Schaal, Inverse kinematics with
+  floating base and constraints for full body humanoid robot control, in {\em
+  Humanoid Robots (Humanoids), 2008 8th IEEE-RAS International Conference on},
+  (Daejung, Korea), pp.~22--27, 2008.
+
+\bibitem{kajita03}
+S.~Kajita, F.~Kanehiro, K.~Kaneko, K.~Fujiwara, K.~Harada, K.~Yokoi, and
+  H.~Hirukawa, Biped walking pattern generation by using preview control of
+  zero-moment point, in {\em Robotics and Automation, 2003. Proceedings. ICRA
+  '03. IEEE International Conference on}, vol.~2, (Taipei, China),
+  pp.~1620--1626 vol.2, Sept 2003.
+
+\bibitem{asimo}
+K.~Hirai, M.~Hirose, Y.~Haikawa, and T.~Takenaka, The development of {Honda}
+  humanoid robot, in {\em Robotics and Automation, 1998. Proceedings. 1998
+  IEEE International Conference on}, vol.~2, (Leuven, Belgium), pp.~1321--1326
+  vol.2, 1998.
+
+\bibitem{xinji}
+X.~Xinjilefu, S.~Feng, W.~Huang, and C.~Atkeson, Decoupled state estimation
+  for humanoids using full-body dynamics, in {\em Robotics and Automation,
+  2014. ICRA '14. IEEE International Conference on}, (Hong Kong, China), 2014.
+
+\bibitem{sfeng_proposal}
+S.~Feng, Online hierarchical optimization for humanoid control, tech. rep.,
+  Robotics Institute, Carnegie Mellon University, December 2014.
+
+\bibitem{benx_proposal}
+X.~Xinjilefu, State estimation for humanoid robots, tech. rep., Robotics
+  Institute, Carnegie Mellon University, October 2014.
+
+\end{thebibliography}
+
+
+%\bibliography{sfeng}
 
 \end{document}
 

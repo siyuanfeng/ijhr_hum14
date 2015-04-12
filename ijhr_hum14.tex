@@ -880,8 +880,9 @@ As we aim for more dynamic behaviors, these kinematic references need to be
 compatible with the dynamic constraints. 
 
 Since the DRC trials, we have developed a new controller based on previous 
-work \cite{sfeng_online,sfeng_proposal} that is capable of more dynamic walking for the Atlas
-robot. The new walking controller is able to achieve 1.7$s$ cadence and 0.4$m$
+work \cite{sfeng_online,sfeng_proposal} that is capable of more dynamic walking
+for the Atlas robot. 
+The new walking controller is able to achieve 1.7$s$ cadence and 0.4$m$
 step length as shown in \fref{fig:fast_walking}. 
 The new approach consists of a high level trajectory optimizer that generates
 reference CoM and swing foot trajectories using the desired footsteps at a low
@@ -890,13 +891,14 @@ on every control cycle.
 The new full body controller no longer runs a separate IK module. 
 Lower body joint level servos consist of only velocity and torque feedback 
 loops. 
-Desired torque comes straight from the output of ID, and desired velocity is 
-leaky integrated by
+The desired torque comes straight from the output of ID, and the desired 
+velocity is leaky integrated by
 \begin{equation}
   \dot{q}_d^* = \alpha (\dot{q}_d^* + \ddot{q}_d dt) + (1-\alpha) \dot{q}_d,
 	\label{eq:qd_int},
 \end{equation} 
-where $\ddot{q}_d$ is the acceleration computed by ID, and $\alpha = 0.99$. 
+where $\dot{q}_d^*$ is the desired velocity, $\dot{q}_d$ is the current 
+measured velocity, $\ddot{q}_d$ is the acceleration computed by ID, and $\alpha = 0.99$. 
 The velocity loop is necessary for swing leg tracking. 
 For the upper body, desired joint positions are directly specified.
 
@@ -912,75 +914,92 @@ For the upper body, desired joint positions are directly specified.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion and future work}
-During early development on the real robot, we found using ID alone is 
+During early robot development, we found using ID alone is 
 insufficient to generate the desired motions on the physical robot, especially 
 for the swing leg and arms. 
-We attribute this to modeling errors and joint stiction and friction.
-Some control based on kinematics is necessary to achieve accurate foot and hand 
-placement. 
+For most joints on the Atlas robot, there is about 10$Nm$ friction, which is
+on the same order of the torques for tracking joint trajectories when no external
+load is applied.
+Also because joint torques are measured by the pressure difference across piston 
+chambers, even with an accurate mass model and perfect torque tracking, we still
+need to explicitly compensate for friction to achieve good kinematic tracking
+performance. 
+Hence, some form of kinematics based control is necessary to achieve good  
+tracking performance for the lightly loaded joints, such as those on the swing 
+leg and arm.
+Due to the tight time frame for the DRC Trials in December 2013, we introduced
+a separate IK pass as a temporary solution, which was suitable for mostly slow and
+static behaviors such as manipulation and ladder climbing during the Trials. 
+For more dynamic behaviors, inconsistency between ID and IK's solutions became 
+a major issue. 
+Failures occur when IK's solution violates physical dynamic constraints that are 
+only properly handled by ID. 
+For example, if the desired overall CoM trajectory has accelerations that 
+exceed the limits imposed by ground friction, it is physically unachievable. 
+However, IK is unaware of such constraints, and it will keep tracking the 
+unrealistic desired trajectory. 
+Our recent effort towards faster walking demands kinematic references that are 
+compatible with the underlying dynamic constraints. 
+In the new walking controller, joint accelerations computed by ID are 
+integrated into velocities and used as references in the joint level servos. 
+We are able to achieve much faster walking speed than the previous approach, 
+which relies on a separate IK pass. 
 
-We have briefly experimented with naively integrating desired accelerations 
-from ID into desired velocity and position, which resulted in unstable overall 
-behaviors. We did not investigate this further for the sake of development time, but 
-we observed qualitatively the same behaviors in simulation when 20$ms$ delays 
-of the torque command were added.
-
-Thus, a separate IK pass was introduced as a temporary solution. 
-Inconsistency between ID and IK solutions becomes our major concern. 
-A failure mode that we have observed is due to IK and ID having separate constraints. For 
-example, when ID is unable to produce the demanded CoM acceleration due to 
-limited friction, CoM will physically diverge from the desired trajectory. 
-However, IK is unaware of such constraints, and it will keep generating
-physically unrealistic answers. We have also experimented with heavily 
-biasing IK solutions to match the acceleration from ID, which also resulted in 
-unstable behaviors. This, in the limit, is equivalent to integrating the 
-acceleration. We think one approach to resolve this issue is to replace our 
-current ID/IK combination with Receding Horizon Control on the full dynamic 
-model similar to \cite{tass_mpc}, which is close to, but not yet, 
-computationally tractable in a real-time setting.
-
-The current implementation works well for static behaviors. Being static allows
-us to use various integrators to compensate for modeling errors easily. It 
-also greatly reduces the effects of all kinds of delays. We want to achieve more
-dynamic behaviors in the near future to gain speed and improve stability. Dynamic 
-walking is one of our top priority goals. Modeling errors and delays 
-stopped our early attempt to walk dynamically with the walking controller 
-presented in \cite{sfeng_online}. The high level controller needs to rapidly 
-re-optimize foot step timing and location in a receding horizon fashion to 
-account for tracking errors and perturbation. We are actively experimenting with 
-explicitly accounting for torque delays in our inverse dynamics formulation. 
+For the Trials, our static approached allowed us to use various integrators to 
+compensate for modeling errors easily. 
+Being slow also mitigated the effects of all kinds of delays in the system. 
+In the current fast walking controller development, we are exploring ways to 
+directly compensate CoP tracking delays in the simple point mass model we use 
+for CoM trajectory generation. 
+CoM level modeling errors have been estimated based on LIPM 
+dynamics \cite{benx_proposal}, and compensated as an external perturbation 
+force acting at the CoM \cite{sfeng_proposal} in the full body controller.
+The high level controller also needs to rapidly re-optimize footstep timing and
+location in a receding horizon fashion to handle large external perturbations. 
+We are actively experimenting with explicitly accounting for torque delays in 
+our inverse dynamics formulation as well. 
 The current low level controllers are optimizing greedily for the current 
-time step. Thus, we want to include a value function that captures the future cost
-similar to \cite{scott_qp}. 
+time step. 
+Including a value function that captures the future cost similar to 
+\cite{scott_qp} is desirable. 
 
-Due to the tight timeline for the DRC Trials, we have not conducted many system 
-identification procedures on the robot. We hope to increase the quality for 
-both kinematic and dynamic models in the near future. All 
-the leg joint level sensing on the Atlas robot such as position, velocity 
+We hope to increase the overall performance with better models in the near future. 
+All the leg joint level sensing on the Atlas robot such as position, velocity 
 (numerically differentiated from position) and torque are pre-transmission. 
 This hardware design choice alleviates jitter in the low level joint control, 
-but introduces problems for forward kinematics and torque control. Unmeasured
-stiction greatly degrades performance of torque control. Better state 
-estimation technology is necessary to achieve more accurate position tracking 
-and force control. 
+but introduces problems for forward kinematics and torque control. 
+Unmeasured stiction and friction degrades performance of torque control. 
+Better state estimation technology needs to be developed for more accurate 
+kinematic tracking and force control. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Conclusions}
 We modified previous work to implement the proposed controller on the Atlas 
-robot. Our approach uses both ID and IK in the full body controller. The ID 
-module provides compliant motion and robustness against perturbation. 
-The IK module helps us battle modeling errors and makes the controller 
-applicable to real hardware. The combined low level controller 
-abstracts away the details about the physical system and provides mechanisms to 
-realize and trade off among high level controllers' potentially conflicting 
-objectives while obeying various constraints. We have successfully demonstrated 
-our approach on three different challenging real life applications, uneven 
-terrain traversal, ladder climbing, and manipulation during the DRC Trials. 
-We are the only Atlas team that was able to climb the ladder reliably, and one 
+robot. 
+Our approach used both inverse dynamics and inverse kinematics in the full body 
+controller. 
+The inverse dynamics module provided compliant motion and robustness against 
+perturbation. 
+The inverse kinematics module helped us battle modeling errors and made rapid 
+real hardware deployment of the controller possible.
+The combined low level controller abstracted away the details about the physical 
+system and provided mechanisms to realize and trade off among potentially 
+conflicting objectives while obeying various constraints. 
+Our recent development favors an unified full body controller that integrates 
+the accelerations from the ID results to generate kinematic references for more 
+dynamic behaviors. 
+For more static tasks such as manipulation, the original IK and ID combination 
+is still preferred for higher kinematic model accuracy.
+
+We had successfully demonstrated our approach on three different challenging 
+real life applications, uneven terrain traversal, ladder climbing, and 
+manipulation during the DRC Trials in December 2013. 
+We were the only Atlas team that was able to climb the ladder reliably, and one 
 of the two Atlas teams that implemented their own walking controller during the
-Trials.
+Trials. 
+Recent improvements to the proposed controller enabled the Atlas robot to walk 
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -36,7 +36,7 @@
 
 \begin{document}
 
-\markboth{Insert Authors' Names here}{Optimization Based Full Body Control for the Atlas Robot}
+\markboth{Siyuan Feng, Eric Whitman, X Xinjilefu, Chris Atkeson} {Optimization Based Full Body Control for the Atlas Robot}
 
 %%%%%%%%%%%%%%%%%%%%% Publisher's Area please ignore %%%%%%%%%%%%%%%
 %
@@ -573,38 +573,41 @@ Xinjilefu et al. \cite{xinji}.
 \subsection{Static walking}
 \label{sec:static_walking}
 For the DRC Trials, we used a simple static walking strategy. 
-Desired CoM motioni is represented with a quintic spline. Swing foot trajectory 
-is generated with piecewise splines. 
+Desired CoM motioni was represented with a quintic spline. 
+Swing foot trajectory was generated with piecewise splines. 
+% TODO
 \fref{fig:terrain_pic} shows snapshots of the Atlas robot traversing piled cinder
 blocks with tilted tops, and CoM and feet trajectories are plotted in 
 \fref{fig:walk_com}. 
-The desired CoP trajectory is 
-generated using a Linear Inverted Pendulum Model (LIPM). \fref{fig:walk_cop} shows 
-CoP tracking for the Atlas robot stepping up piled cinder blocks. 
+The desired CoP trajectory was generated using a Linear Inverted Pendulum 
+Model (LIPM). 
+%TODO
+\fref{fig:walk_cop} shows CoP tracking for the Atlas robot stepping up piled cinder blocks. 
 
-Most other teams at the DRC Trials
-build a map with laser point clouds and select foot steps with either a human 
-operator or some combination of heuristics and simple planning. Because of 
-forward kinematic errors in the robot, registering laser points while moving
-does not work well. The robot has to be stationary to generate high fidelity 
-maps. To avoid extensive periods of standing still, we provide our
-human operator with a live camera stream augmented with the current swing 
-foot pose computed from forward kinematics, and let the operator ``nudge'' 
-the swing foot around in Cartesian space by commanding offsets in desired foot 
-position and orientation. Once the operator is satisfied with the foot pose, 
-a ``continue'' command is issued, the robot puts the swing foot 
-straight down until ground contact. On the downside, our approach requires
-more (and more difficult) input from the operator, and has much longer single
-support phase when the operator commands are issued.
+Most other teams at the DRC Trials built a map with laser point clouds and 
+selected foot steps with either a human operator or some combination of 
+heuristics and simple planning. 
+Due to forward kinematic errors in the robot, registering laser points while
+moving did not work well. 
+The robot had to be stationary to generate high fidelity maps. 
+To avoid extensive periods of standing still, we provided our human operator 
+with a live camera stream augmented with the current swing foot pose computed
+from forward kinematics, and let the operator ``nudge'' the swing foot around
+in Cartesian space by commanding offsets in desired foot position and orientation. 
+Once the operator was satisfied with the foot pose, a ``continue'' command was 
+issued, the robot put the swing foot straight down until ground contact. 
+On the downside, our approach required more (and more difficult) input from 
+the operator, and had much longer single support phase when the operator 
+commands were being issued.
 
-The following modifications to the full body controller as described above are
+The following modifications to the full body controller as described above were
 made for the walking task:
 \subsubsection{Ankle torque controlled}
-To fully control CoP for better balancing, we control the stance 
-ankles in pure torque mode. IK solutions for the stance ankle joints are 
-ignored. The downside is that the ankle position errors propagate up the 
-kinematic chain, and result in errors in swing foot tracking. An integrator on 
-the desired swing foot position is used to compensate for this. 
+For better CoP control, the stance ankles were controlled in pure torque mode. 
+IK solutions for the stance ankle joints were ignored. 
+The downside was that the ankle position errors propagated up the kinematic 
+chain, and resulted in errors in swing foot tracking. 
+An integrator on the desired swing foot position was used to compensate for this. 
 \begin{equation}
   \label{eq:int}
   \begin{split}
@@ -614,22 +617,24 @@ the desired swing foot position is used to compensate for this.
 \end{equation}  
 where $x_{swing_d}'$ is the desired swing foot position from the operator or a 
 foot step planner, 
-$x_{swing}$ is 
-the computed position from forward kinematics, and $x_{swing_d}^*$ is used 
-as inputs in \eref{eq:id_cart_pd} and \eref{eq:ik_cart_pd}. 
+$x_{swing}$ is the computed position from forward kinematics, 
+and $x_{swing_d}^*$ is used as inputs in \eref{eq:id_cart_pd} and 
+\eref{eq:ik_cart_pd}. 
 
 \subsubsection{Toe-off}
 For static walking, the CoM needs to be completely shifted to the next stance foot 
-during double support. When taking longer strides or stepping to a greater height,
-extending the 
-rear leg knee alone is often insufficient to move the CoM all the way. Toe-off 
-is one solution to this problem. During double support, 
-toe-off is triggered when the rear knee approaches the joint angle limit 
-(straight knee). 
-During toe-off, we shift the rear foot reference point, where the Jacobian is 
-computed, to the toe. The contact cost terms in \eref{eq:id_cart} and \eref{eq:ik_cart} for the 
-rear foot are modified. Position terms remain the same. For the rotational terms,
-we first compute
+during double support. 
+When taking longer strides or stepping to a greater height, extending the 
+rear leg knee alone is often insufficient to move the CoM all the way. 
+Toe-off is one solution to this problem. 
+During double support, toe-off was triggered when the rear knee approached the 
+joint angle limit (straight knee). 
+During toe-off, we shifted the rear foot reference point, where the Jacobian was 
+computed, to the toe. 
+The contact cost terms in \eref{eq:id_cart} and \eref{eq:ik_cart} for the rear 
+foot were modified. 
+Position terms remained the same. 
+For the rotational terms, we first computed
 \begin{equation}
   \begin{split}
     A^{ID}_{Rot} &= \begin{bmatrix} R J_{rot}(q) & 0 & 0 \end{bmatrix} \\
@@ -640,33 +645,36 @@ we first compute
 	\label{eq:cart_rot}
 \end{equation}   
 for ID and IK respectively, where $R$ is the rotation matrix from world to foot 
-frame. Only the first and third rows in \eref{eq:cart_rot}, that correspond to 
-roll and yaw motion are added to the cost functions. $\ddot{x}^*_{Rot}$ is set to zero, 
-and $\dot{x}^*_{Rot}$ is computed with \eref{eq:leaky}.
+frame. 
+Only the first and third rows in \eref{eq:cart_rot}, that corresponded to 
+roll and yaw motion were added to the cost functions.
+$\ddot{x}^*_{Rot}$ was set to zero, and $\dot{x}^*_{Rot}$ was computed with \eref{eq:leaky}.
 We also set $d^-_y = d^+_y = 0$ in \eref{eq:id_cop_con}. 
-This effectively turns the rear foot contact into an unactuated pin joint 
-around the pitch axis. A slightly bent rear knee angle is given as desired in 
-\eref{eq:id_reg} and \eref{eq:ik_reg} as well.
+This effectively turned the rear foot contact into an unactuated pin joint 
+around the pitch axis. 
+A slightly bent rear knee angle was given as desired in \eref{eq:id_reg} and 
+\eref{eq:ik_reg} as well.
 
 \subsubsection{Integrator for desired CoM offset}
 \label{sec:com_int}
 Assuming the robot is moving slowly enough, we can approximate the true CoM 
 with the measured CoP, and compute $CoM_{err} = CoP - CoM_{model}$.
 During the second half of double support and single support phase, 
-we integrate $CoM_{err}$ to offset the desired CoM so that the true CoM is at 
+we integrated $CoM_{err}$ to offset the desired CoM so that the true CoM was at 
 the middle of the supporting foot. 
-The integrator is set up similarly to \eref{eq:int}. 
+The integrator was set up similarly to \eref{eq:int}. 
 
 \begin{figure}
   \begin{center}
     {\includegraphics[width=1\textwidth]{images/terrain.eps}}
     \caption{
-      These photos show the Atlas robot practicing for the segment 3 of the 
+      These photos show the Atlas robot practicing for the third segment of the 
       terrain task for the DRC Trials. The snapshots were taken every 5 seconds.
       }\label{fig:terrain_pic} 
   \end{center}
 \end{figure}
 
+%TODO
 \begin{figure}
   \begin{center}
     \subfigure[Measured feet and CoM trajectories in $XY$ plane for terrain task]
@@ -686,6 +694,7 @@ The integrator is set up similarly to \eref{eq:int}.
   \end{center}
 \end{figure}     
 
+%TODO
 \begin{figure}
   \begin{center}
     \subfigure[CoP in X axis]
@@ -720,17 +729,19 @@ The integrator is set up similarly to \eref{eq:int}.
     {\includegraphics[width=0.9\textwidth]{images/ladder.eps}}
     \caption{
       These photos show the Atlas robot climbing the top half of the same 
-      ladder as used in the DRC Trials. The snapshots were taken every 13 seconds. The
-      top row shows re-positioning of the hook hands, and the bottom row shows
-      stepping up one tread. Most of the climbing motions are scripted. After
-      each limb's rough re-positioning, the operator can fine adjust its final 
-      position with ``nudge'' commands that are small offsets in Cartesian 
-      space. 
+      ladder as used in the DRC Trials. 
+			The snapshots were taken every 13 seconds. 
+			The top row shows re-positioning of the hook hands, 
+			and the bottom row shows stepping up one tread. 
+			Most of the climbing motions were scripted. 
+			After each limb's rough re-positioning, the operator fine adjusted
+			its final position with ``nudge'' commands that were small offsets 
+			in Cartesian space. 
       }\label{fig:ladder_pic} 
   \end{center}
 \end{figure}    
 
-
+% TODO
 \begin{figure}
   \begin{center}
     \subfigure[Measured limb and CoM trajectories in the $XZ$ plane]
@@ -754,123 +765,127 @@ The integrator is set up similarly to \eref{eq:int}.
 \end{figure}
 
 \subsection{Full body manipulation}
-During full body manipulation, the operator gives commands requesting either 
+During full body manipulation, the operator gave commands requesting either 
 direct joint angles or target Cartesian poses for one or both hands. 
-These commands are used as $x^*_d$ in \eref{eq:id_cart_pd} and \eref{eq:ik_cart_pd}.
-We use equality constraints in the IK QP to enforce 
-directly specified joint angles. 
-For large Cartesian motions, the new target is connected to the current target
+These commands were used as $x^*_d$ in \eref{eq:id_cart_pd} and \eref{eq:ik_cart_pd}.
+We used equality constraints in the IK QP to enforce directly specified joint angles. 
+For large Cartesian motions, the new target was connected to the current target
 through splines. 
-For small motions, we use the ``nudge'' method as described above for precise 
-foot placement.
-The controller also takes full body trajectories that are planned offline.
-\fref{fig:manip} shows a picture of the Atlas robot executing such a trajectory.
+For small motions, we used the ``nudge'' method as described above. 
+The controller could also take full body trajectories generated by a motion planner.
+\fref{fig:manip} shows snapshots of the Atlas robot executing such a trajectory.
 
 \begin{figure} 
   \begin{center}
     {\includegraphics[width=1\textwidth]{images/debris.eps}}
-    \caption{The proposed low level controller is applied on the Atlas robot 
-      to grab a piece of wood following an offline planned full body trajectory.}
+    \caption{The proposed low level controller was applied on the Atlas robot 
+      to grab a piece of wood following a planned full body trajectory.}
 			\label{fig:manip}
   \end{center}
 \end{figure}  
  
-We make a few small changes to the basic full body controller:
+A few small changes were made to the basic full body controller:
 \subsubsection{No anchoring}
-During manipulation, we keep both feet planted and do not take any steps. 
-Accordingly, we do not have to worry about the IK position diverging from the 
-estimated robot position. However, the leaky integrator in \eref{eq:leaky} 
-can result in a failure mode characterized by a constant velocity sliding of 
-the foot. We call this failure mode a ``chase condition'', and it occurs when 
-the contact friction is too low to keep the feet from sliding on its own 
-(usually because very little weight is on one of the feet). Normally, the 
-foot would slide a small amount, but then the position gains from the IK 
-prevent further sliding. However, when we constantly update the IK to the 
-measured position, it can then constantly slide farther. We therefore 
-disable this integrator during manipulation.
+During manipulation, we kept both feet planted and did not take any steps. 
+Accordingly, we did not have to worry about the IK position diverging from the 
+estimated robot position. 
+However, the leaky integrator in \eref{eq:leaky} could result in a failure mode 
+characterized by a constant velocity sliding of the foot. 
+We called this failure mode a ``chase condition'', and it occurred when 
+the contact friction was too low to keep the feet from sliding on its own 
+(usually because very little weight was on one of the feet). 
+If we constantly updated the IK to the measured position, it could slide farther. 
+We therefore disabled this integrator during manipulation.
 \label{sec:chase_condition}
 
 \subsubsection{Allowing rotation}
-For some tasks, we only care about the position of the hand, and the 
-orientation is unimportant. For such cases, we can remove the rotational
-rows entirely in \eref{eq:id_cart} and \eref{eq:ik_cart}. For some tasks, we can allow free rotation around one 
-vector, but not otherwise. For example, while drilling through a wall, the 
-robot can freely rotate the drill around the drilling axis, but must 
-maintain its position and keeping that axis normal to the wall. Allowing 
-the controller the freedom to rotate around one axis can drastically 
-increase the available workspace. The modification is similar to
-\eref{eq:cart_rot}. $R$ is constructed from a basis of three orthogonal 
-unit vectors including the desired free-to-rotate-about axis, and the row 
-that corresponds to the rotation axis is dropped. 
+For some tasks, we only cared about the position of the hand, and the 
+orientation was unimportant. 
+For such cases, we can removed the rotational rows entirely 
+in \eref{eq:id_cart} and \eref{eq:ik_cart}. 
+For some tasks, we could allow free rotation around one vector, but not 
+otherwise. 
+For example, while drilling through a wall, the robot can freely rotate the 
+drill around the drilling axis, but must maintain its position and keep that 
+axis normal to the wall. 
+Allowing the controller the freedom to rotate around one axis can drastically 
+increase the available workspace. 
+This modification was similar to \eref{eq:cart_rot}. 
+$R$ was constructed from a basis of three orthogonal unit vectors including 
+the desired free-to-rotate-about axis, and the row that corresponded to the 
+rotation axis was dropped. 
 
 \subsection{Ladder climbing}
-The underlying controller for ladder climbing is similar to that used for 
-manipulation, but the majority of the motion is scripted ahead of time with 
+The underlying controller for ladder climbing was similar to that used for 
+manipulation, but the majority of the motion was scripted ahead of time with 
 only the final placement of the hands and feet controlled by the operator. 
 \fref{fig:ladder_pic} shows snapshots of a complete cycle of the Atlas robot
 climbing the ladder. 
-CoM and limb trajectories from the actual run during the DRC Trials are plotted 
-in \fref{fig:ladder_data}. 
-Hand or foot is automatically moved to approximately the 
-desired position by placing it relative to the other hand or foot. Then, 
-the operator uses the keyboard to precisely place the limb with 1$cm$ 
-increments. The correct vertical height is found automatically, using force 
-sensors to detect contact for the feet and position sensing when contact is 
+CoM and limb trajectories from the actual run during the DRC Trials are 
+plotted in \fref{fig:ladder_data}. 
+Hand or foot was automatically moved to approximately the desired position by 
+placing it relative to the other hand or foot. 
+Then, the operator precisely placed the limb with 1$cm$ increments using 
+``nudge'' commands. 
+The correct vertical height was found automatically, using force sensors to 
+detect contact for the feet and position sensing when contact was
 known to have already occurred for the hands.
 
-Once on the steps, only the toes of the feet are supported, so we adjust the 
-CoP constraint accordingly in \eref{eq:id_cop_con}. Having all of the weight on the toes makes the 
-robot vulnerable to rotational slipping, causing unexpected yaw rotations.
-After such slip occurs, we need to inform the IK controller. 
-This issue is analogous the root position divergence problem in the walking case, 
-but for orientation instead.
+Once on the steps, only the toes of the feet were supported, so we adjusted
+the CoP constraint accordingly in \eref{eq:id_cop_con}. 
+Having all of the weight on the toes made the robot vulnerable to rotational
+slipping, causing unexpected yaw rotations.
+After such slip occurred, we had to inform the IK controller. 
+This issue was analogous the root position divergence problem in the walking
+case, but for orientation instead.
 In order to correctly place the hands on the next rung to recover from such 
-rotations, we must rotate the IK solution to match the measured orientation.  
-We therefore periodically rotate the IK solution such that the feet are aligned 
-with the measured feet orientations, and then the robot will reorient its 
-upper body towards the ladder and correctly reach targets in the real world.  
+rotations, we periodically rotated the IK solution such that the feet were
+aligned with the measured feet orientations. 
+The robot would then reorient its upper body towards the ladder and correctly 
+reach targets in the real world.  
 It would have been preferable to update the orientation continuously, but 
 periodic updates were easier from a software engineering perspective.  
-Additionally, periodic updates are less susceptible to the ``chase 
-condition'' problem described in \sref{sec:chase_condition}. 
-This reorienting serves a similar purpose 
-to \eref{eq:leaky}, but for rotation instead of translation. 
-To avoid chase conditions, this modification is disabled if there is not 
+Additionally, periodic updates were less susceptible to the ``chase condition''
+problem described in \sref{sec:chase_condition}. 
+This reorienting served a similar purpose to \eref{eq:leaky}, but for 
+rotation instead of translation. 
+To avoid chase conditions, this modification was disabled if there was not 
 significant (about 20\%) weight on the foot.
 
 \subsubsection{Elbow management}
-We climb the ladder by placing the hands (hooks made from pipes) on the steps.
-The robot's shoulders are nearly as wide as the railings, so the necessity of 
-shifting weight from side to side results in a significant danger of bumping 
-the arms on the railings. We avoid such collisions by estimating the railing 
-location based on the hand location (based on the assumption that the hand 
-is pushed up against the side of the rung) and adding inequality constraints 
-to the IK using \eref{eq:ik_cart_ineq}. 
-The inequality constraints limit how far outward each elbow can 
-move in the lateral direction. Additionally, when we wish to intentionally 
-lean on the railing, we provide a desired elbow location (in only the 
-lateral direction) with a low weight. To prevent the problem from becoming 
-over-constrained by elbow management, we use low weights for commanding hand 
-orientation. Specifically, we use \eref{eq:cart_rot} to rotate the hand 
-orientation equations into a basis containing the hand axis, a pitch-like 
-vector, and a yaw-like vector. We use a very low, but non-linear weight for 
-rotation about the hand axis (roll-like), allowing it roll about 45 degrees 
-nearly freely, but preventing it from rolling much farther.
+We climbed the ladder by placing the hands (hooks made from pipes) on the steps.
+The robot's shoulders were nearly as wide as the railings, so the necessity of 
+shifting weight from side to side resulted in a significant danger of bumping 
+the arms on the railings. 
+We avoided such collisions by estimating the railing location based on the hand
+location (based on the assumption that the hand was pushed up against the side
+of the rung) and adding inequality constraints to the IK using \eref{eq:ik_cart_ineq}. 
+The inequality constraints limited how far outward each elbow could move in the 
+lateral direction. 
+Additionally, when we wished to intentionally lean on the railing, we provided 
+a desired elbow location (in only the lateral direction) with a low weight. 
+To prevent the problem from becoming over-constrained by elbow management, we 
+used low weights for commanding hand orientation. 
+Specifically, we used \eref{eq:cart_rot} to rotate the hand orientation equations
+into a basis containing the hand axis, a pitch-like vector, and a yaw-like vector.
+We used a very low, but non-linear weight for rotation about the hand axis 
+(roll-like), allowing it roll about 45 degrees nearly freely, but preventing it 
+from rolling much farther.
 
 \subsubsection{Hand to CoM integration}
-Our forward kinematics based on the robot model is inaccurate. 
-One result is that if 
-the hands are resting on one rung and the robot steps up one step on the 
-ladder, even though the true position of the hands will not have moved, the 
-measured position will have moved several centimeters. If not accounted for, 
-this will push the CoM far from the desired location, eventually resulting 
-in failure. We therefore introduce an integrator that gradually adjusts the 
-desired position of both hands in the horizontal plane based on the deviation 
-between the measured and desired CoM position similar to \sref{sec:com_int}. 
-Essentially, we are using the 
-arms to pull or push the CoM into the desired position. To avoid unintentionally 
-rotating the robot, this integrator is only active while both hands are in 
-contact with the rung. 
+Our forward kinematics based on the robot model was inaccurate. 
+One result was that if the hands were resting on one rung and the robot stepped
+up one step on the ladder, even though the true position of the hands would not
+have moved, the measured position would have moved several centimeters. 
+If not accounted for, this would push the CoM far from the desired location, 
+eventually resulting in failure. 
+We therefore introduced an integrator that gradually adjusted the desired position
+of both hands in the horizontal plane based on the deviation between the measured 
+and desired CoM position similar to \sref{sec:com_int}. 
+Essentially, we were using the arms to pull or push the CoM into the desired 
+position. 
+To avoid unintentionally rotating the robot, this integrator was only active 
+while both hands were in contact with the rung. 
 
 \section{Towards faster walking}
 \label{sec:new_stuff}
@@ -878,9 +893,9 @@ Although ID was helpful for balancing, the walking controller presented in
 \sref{sec:static_walking} was essentially kinematics driven. 
 For slow static walking, the controller hardly run into dynamic constraints, 
 which allowed us to use a separate IK module to generate desired joint 
-positions and velocities. 
-As we aim for more dynamic behaviors, these kinematic references need to be 
-compatible with the dynamic constraints. 
+position and velocity. 
+As we aim for more dynamic behaviors, these kinematic references need to obey
+the underlying dynamic constraints. 
 
 Since the DRC trials, we have developed a new controller based on previous 
 work \cite{sfeng_online,sfeng_proposal} that is capable of more dynamic walking
@@ -891,7 +906,7 @@ The new approach consists of a high level trajectory optimizer that generates
 reference CoM and swing foot trajectories using the desired footsteps at a low
 frequency, and a full body controller that tracks the reference trajectories 
 on every control cycle. 
-The new full body controller no longer runs a separate IK module. 
+The new walking controller no longer runs a separate IK module. 
 Lower body joint level servos consist of only velocity and torque feedback 
 loops. 
 The desired torque comes straight from the output of ID, and the desired 
@@ -918,22 +933,21 @@ For the upper body, desired joint positions are directly specified.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion and future work}
 \label{sec:dis}
-During early robot development, we found using ID alone is 
-insufficient to generate the desired motions on the physical robot, especially 
+During early robot development before the Trials, we found using ID alone is 
+insufficient to track the desired motions on the physical robot, especially 
 for the swing leg and arms. 
 For most joints on the Atlas robot, there is about 10$Nm$ friction, which is
-on the same order of the torques for tracking joint trajectories when no external
-load is applied.
+on the same order of torques for tracking joint trajectories when no external
+force is applied.
 Also because joint torques are measured by the pressure difference across piston 
 chambers, even with an accurate mass model and perfect torque tracking, we still
-need to explicitly compensate for friction to achieve good kinematic tracking
+need to explicitly compensate for friction to achieve good motion tracking
 performance. 
-Hence, some form of kinematics based control is necessary to achieve good  
-tracking performance for the lightly loaded joints, such as those on the swing 
-leg and arm.
+Hence, some form of kinematics based control is necessary for the lightly loaded
+joints, such as those on the swing leg and arms.
 Due to the tight time frame for the DRC Trials in December 2013, we introduced
 a separate IK pass as a temporary solution, which was suitable for mostly slow and
-static behaviors such as manipulation and ladder climbing during the Trials. 
+static tasks such as manipulation and ladder climbing in the Trials. 
 For more dynamic behaviors, inconsistency between ID and IK's solutions became 
 a major issue. 
 Failures occur when IK's solution violates physical dynamic constraints that are 
@@ -946,8 +960,8 @@ Our recent effort towards faster walking demands kinematic references that are
 compatible with the underlying dynamic constraints. 
 In the new walking controller, joint accelerations computed by ID are 
 integrated into velocities and used as references in the joint level servos. 
-We are able to achieve much faster walking speed than the previous approach, 
-which relies on a separate IK pass. 
+We are able to achieve much faster walking speed compared with the previous 
+approach that relied on a separate IK module. 
 
 For the Trials, our static approached allowed us to use various integrators to 
 compensate for modeling errors easily. 
@@ -955,13 +969,13 @@ Being slow also mitigated the effects of all kinds of delays in the system.
 In the current fast walking controller development, we are exploring ways to 
 directly compensate CoP tracking delays in the simple point mass model we use 
 for CoM trajectory generation. 
+We are experimenting with explicitly accounting for torque delays in our ID
+formulation as well.  
 CoM level modeling errors have been estimated based on LIPM 
 dynamics \cite{benx_proposal}, and compensated as an external perturbation 
 force acting at the CoM \cite{sfeng_proposal} in the full body controller.
 The high level controller also needs to rapidly re-optimize footstep timing and
 location in a receding horizon fashion to handle large external perturbations. 
-We are actively experimenting with explicitly accounting for torque delays in 
-our inverse dynamics formulation as well. 
 The current low level controllers are optimizing greedily for the current 
 time step. 
 Including a value function \cite{scott_qp} that captures the future cost is 
@@ -972,7 +986,7 @@ All the leg joint level sensing on the Atlas robot such as position, velocity
 (numerically differentiated from position) and torque are pre-transmission. 
 This hardware design choice alleviates jitter in the low level joint control, 
 but introduces problems for forward kinematics and torque control. 
-Unmeasured stiction and friction degrades performance of torque control. 
+Unmeasured friction and stiction forces degrade performance of torque control. 
 Better state estimation technology needs to be developed for more accurate 
 kinematic tracking and force control. 
 
@@ -982,29 +996,25 @@ kinematic tracking and force control.
 \section{Conclusions}
 \label{sec:conclusion}
 We modified previous work to implement the proposed controller on the Atlas 
-robot. 
+robot. We had successfully demonstrated our approach on three different challenging 
+real life applications, uneven terrain traversal, ladder climbing, and 
+manipulation during the DRC Trials in December 2013. 
+We were the only Atlas team that was able to climb the ladder reliably.  
 Our approach used both inverse dynamics and inverse kinematics in the full body 
 controller. 
-The inverse dynamics module provided compliant motion and robustness against 
-perturbation. 
+The inverse dynamics module provided more compliant motion and more robustness 
+against external perturbation. 
 The inverse kinematics module helped us battle modeling errors and made rapid 
 real hardware deployment of the controller possible.
 The combined low level controller abstracted away the details about the physical 
 system and provided mechanisms to realize and trade off among potentially 
 conflicting objectives while obeying various constraints. 
-Our recent development favors an unified full body controller that integrates 
-the accelerations from the ID results to generate kinematic references for more 
-dynamic behaviors. 
-For more static tasks such as manipulation, the original IK and ID combination 
-is still preferred for more accurate position tracking with the arms.
-
-We had successfully demonstrated our approach on three different challenging 
-real life applications, uneven terrain traversal, ladder climbing, and 
-manipulation during the DRC Trials in December 2013. 
-We were the only Atlas team that was able to climb the ladder reliably, and one 
-of the two Atlas teams that implemented their own walking controller during the
-Trials. 
-Recent improvements to the proposed controller enabled the Atlas robot to walk 
+For more dynamic behaviors, our recent development favors an unified full body
+controller that integrates the accelerations from the ID results to generate 
+kinematic references instead of a separate IK module.
+On the other hand, for more static tasks such as manipulation, the original 
+IK and ID combination is still preferred for more accurate position tracking with
+the arms.
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

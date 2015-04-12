@@ -657,7 +657,7 @@ The integrator is set up similarly to \eref{eq:int}.
 
 \begin{figure}
   \begin{center}
-    {\includegraphics[width=0.48\textwidth]{images/terrain.eps}}
+    {\includegraphics[width=1\textwidth]{images/terrain.eps}}
     \caption{
       These photos show the Atlas robot practicing for the segment 3 of the 
       terrain task for the DRC Trials. The snapshots were taken every 5 seconds.
@@ -715,7 +715,7 @@ The integrator is set up similarly to \eref{eq:int}.
 
 \begin{figure}
   \begin{center}
-    {\includegraphics[width=0.48\textwidth]{images/ladder.eps}}
+    {\includegraphics[width=1\textwidth]{images/ladder.eps}}
     \caption{
       These photos show the Atlas robot climbing the top half of the same 
       ladder as used in the DRC Trials. The snapshots were taken every 13 seconds. The
@@ -754,24 +754,22 @@ The integrator is set up similarly to \eref{eq:int}.
 \subsection{Full body manipulation}
 During full body manipulation, the operator gives commands requesting either 
 direct joint angles or target Cartesian poses for one or both hands. 
-These commands are used as $x^*_d$ in \eref{eq:id_cart_pd} and \eref{eq:ik_cart_pd}. We use equality 
-constraints in the IK QP to enforce 
-directly specified joint angles. For large Cartesian motions, the new target is 
-connected to the current target through splines. 
+These commands are used as $x^*_d$ in \eref{eq:id_cart_pd} and \eref{eq:ik_cart_pd}.
+We use equality constraints in the IK QP to enforce 
+directly specified joint angles. 
+For large Cartesian motions, the new target is connected to the current target
+through splines. 
 For small motions, we use the ``nudge'' method as described above for precise 
 foot placement.
-%: single keyboard taps result in 
-%small instantaneous changes in the desired IK position. We then use PD gains 
-%comparing the measured and IK positions (of hands, CoM, etc.) to produce input 
-%desired acceleration for the ID.
-\fref{fig:manip} shows a picture of the Atlas robot performing the valve task 
-during the DRC Trials.
+The controller also takes full body trajectories that are planned offline.
+\fref{fig:manip} shows a picture of the Atlas robot executing such a trajectory.
 
 \begin{figure} 
   \begin{center}
-    {\includegraphics[width=0.3\textwidth]{images/manip.eps}}
+    {\includegraphics[width=1\textwidth]{images/debris.eps}}
     \caption{The proposed low level controller is applied on the Atlas robot 
-      to turn a valve in the DRC Trials.} \label{fig:manip}
+      to grab a piece of wood following an offline planned full body trajectory.}
+			\label{fig:manip}
   \end{center}
 \end{figure}  
  
@@ -882,7 +880,7 @@ As we aim for more dynamic behaviors, these kinematic references need to be
 compatible with the dynamic constraints. 
 
 Since the DRC trials, we have developed a new controller based on previous 
-work \cite{sfeng_online} that is capable of more dynamic walking for the Atlas
+work \cite{sfeng_online,sfeng_proposal} that is capable of more dynamic walking for the Atlas
 robot. The new walking controller is able to achieve 1.7$s$ cadence and 0.4$m$
 step length as shown in \fref{fig:fast_walking}. 
 The new approach consists of a high level trajectory optimizer that generates
@@ -904,9 +902,10 @@ For the upper body, desired joint positions are directly specified.
 
 \begin{figure} 
   \begin{center}
-    {\includegraphics[width=0.9\textwidth]{images/fast_walking.eps}}
-    \caption{Atlas walks at 1.7$s$ cadence and 0.4$m$ step length with the
-		new walking controller.} \label{fig:fast_walking}
+    {\includegraphics[width=1\textwidth]{images/fast_walking.eps}}
+    \caption{Atlas walks with 1.7$s$ cadence and 0.4$m$ step length with the
+		new walking controller. The snapshots are taken every 0.43$s$.} 
+		\label{fig:fast_walking}
   \end{center}
 \end{figure}   
 

@@ -184,8 +184,8 @@ We optimized for acceleration, torque, and contact wrenches simultaneously
 on the full robot model. This design choice was intuitive, and gave us the
 most flexibility in terms of trading off directly among physical quantities
 of interest. Recently, we remove the explicit dependency on joint torques in
-ID using the decoupling presented by Herzog, et al. \cite{alex_hir} to speed
-up computation.
+ID using the decoupling presented by Herzog, et al. \cite{alex_hir} to speedup
+computation.
 %It also provides an easy way to properly manage all constraints on 
 %contact wrenches and joint torques. It does result in a bigger QP problem, 
 %but is still solvable in real time with a standard QP solver. 
@@ -540,7 +540,7 @@ we introduce desired position targets in IK, which we refer to as anchor points.
 Since IK only relies on its internal states, without any external feedback, 
 the internal states will diverge from the state estimator's.
 For example, suppose we wish to take a step of some specific length. 
-The IK controller will hit the desired foot step almost perfectly if not 
+The IK controller will hit the desired footstep almost perfectly if not 
 violating any constraints. The real robot will not due to tracking errors.
 After taking several steps, the IK controller will end up in a significantly
 different location than the state estimator. 
@@ -586,7 +586,7 @@ Model (LIPM).
 \fref{fig:walk_cop} shows CoP tracking for the Atlas robot stepping up piled cinder blocks. 
 
 Most other teams at the DRC Trials built a map with laser point clouds and 
-selected foot steps with either a human operator or some combination of 
+selected footsteps with either a human operator or some combination of 
 heuristics and simple planning. 
 Due to forward kinematic errors in the robot, registering laser points while
 moving did not work well. 
@@ -617,7 +617,7 @@ An integrator on the desired swing foot position was used to compensate for this
   \end{split}
 \end{equation}  
 where $x_{swing_d}'$ is the desired swing foot position from the operator or a 
-foot step planner, 
+footstep planner, 
 $x_{swing}$ is the computed position from forward kinematics, 
 and $x_{swing_d}^*$ is used as inputs in \eref{eq:id_cart_pd} and 
 \eref{eq:ik_cart_pd}. 
@@ -674,8 +674,6 @@ The integrator was set up similarly to \eref{eq:int}.
   \end{center}
 \end{figure}
 
-%TODO
-% UPDATE FIGURES
 \begin{figure}
   \begin{center}
     \subfigure[Measured feet and CoM trajectories in $XY$ plane for terrain task]
@@ -700,7 +698,7 @@ The integrator was set up similarly to \eref{eq:int}.
       %{\includegraphics[width=.45\textwidth]{images/cop_x.eps} \label{subfig:atlas_cop_x}}
     %\subfigure[CoP in Y axis]
       %{\includegraphics[width=0.45\textwidth]{images/cop_y.eps} \label{subfig:atlas_cop_y}}
-    \includegraphics[width=0.9\textwidth]{images/cop_gray.eps} 
+    \includegraphics[width=0.7\textwidth]{images/cop_gray.eps} 
     %\subfigure[Root position in Z axis]
     %  {\includegraphics[width=0.45\textwidth]{images/atlas_z.png} \label{subfig:atlas_pelv_z}}
     \caption{
@@ -734,8 +732,6 @@ The integrator was set up similarly to \eref{eq:int}.
   \end{center}
 \end{figure}    
 
-% TODO
-% more visible plots
 \begin{figure}
   \begin{center}
     \subfigure[Measured limb and CoM trajectories in the $XZ$ plane]
@@ -885,14 +881,39 @@ As we aim for more dynamic behaviors, these kinematic references need to obey
 the underlying dynamic constraints. 
 
 Since the DRC trials, we have developed a new controller based on previous 
-work \cite{sfeng_online,sfeng_proposal} that is capable of more dynamic walking
-for the Atlas robot. 
+work that is capable of more dynamic walking on the Atlas robot. 
 The new walking controller is able to achieve 1.7$s$ cadence and 0.4$m$
 step length as shown in \fref{fig:fast_walking}. 
 The new approach consists of a high level trajectory optimizer that generates
 reference CoM and swing foot trajectories using the desired footsteps at a low
 frequency, and a full body controller that tracks the reference trajectories 
 on every control cycle. 
+
+\subsection{Reference CoM trajectory generation}
+Differential Dynamic Programming (DDP) \cite{ddp} is used to optimize the CoM
+trajectory using a point mass model given a sequence of desired footsteps. 
+The state, $x$, of the point mass model is the 3D position of the CoM,
+and the control, $u$, is a vector of CoP in the $XY$ plane and the vertical 
+force. 
+DDP outputs a reference CoM trajectory, which also contains local linear 
+policies and second order approximations of the value function along it:
+\begin{equation}
+	\begin{split}
+	  u^t(x) &= u^t_n - K^t(x-x^t_n) \\
+		V^t(x) &\approx V^t_n + V^t_x (x-x^t_n) + \frac{1}{2}(x-x^t_n)^TV^t_{xx}(x-x^t_n),
+	\end{split}
+	\label{eq:ddp_res}
+\end{equation} 
+where $u^t_n$ and $x^t_n$ are the  state and control indexed at time $t$ on
+the nominal trajectory. 
+The linear policy is used to generate CoM acceleration for \eref{eq:id_cart}.
+The value function approximation can be incorporated as an extra cost term 
+in ID to inject some notion of the future cost. More details can be found 
+in previous work \cite{sfeng_online,sfeng_proposal}.
+\fref{fig:long_walk_cop} shows CoP tracking on of the Atlas robot walking on
+outdoor paved walkway. 
+
+\subsection{Unified full body controller}
 The new walking controller no longer runs a separate IK module. 
 Lower body joint level servos consist of only velocity and torque feedback 
 loops. 
@@ -907,6 +928,27 @@ measured velocity, $\ddot{q}_d$ is the acceleration computed by ID, and $\alpha 
 The velocity loop is necessary for swing leg tracking. 
 For the upper body, desired joint positions are directly specified.
 
+As pointed by Herzog, et al. \cite{alex_hir}, \eref{eq:eom} can be decoupled 
+into two parts:
+\begin{equation}
+	\begin{split}
+		M_u(q) \ddot{q} + h_u(q,\dot{q}) &= J^T_u(q) \lambda \\
+		M_l(q) \ddot{q} + h_l(q,\dot{q}) &= \tau + J^T_l(q) \lambda,
+	\end{split}
+\label{eq:new_eom}
+\end{equation} 
+where the first half represents the top six rows of the floating base, 
+and the second half corresponds to the actuated DoF. 
+$\tau$ is thus linearly dependent of $\ddot{q}$ and $\lambda$ as
+\begin{equation}
+	\tau = M_l(q) \ddot{q} + h_l(q,\dot{q}) - J^T_l(q) \lambda,
+\label{eq:tau_sub}
+\end{equation} 
+and can be eliminated from $\QPx$ to reduce its size by almost a half for free. 
+\eref{eq:tau_sub} can substitute for $\tau$ in the cost terms and inequality 
+constraints. 
+The equality constraints are modified to the first six rows in \eref{eq:new_eom}.
+
 \begin{figure} 
   \begin{center}
     {\includegraphics[width=1\textwidth]{images/fast_walking.eps}}
@@ -919,9 +961,10 @@ For the upper body, desired joint positions are directly specified.
 \begin{figure} 
   \begin{center}
     {\includegraphics[width=1\textwidth]{images/new_cop.eps}}
-    \caption{Atlas walks with 1.7$s$ cadence and 0.4$m$ step length with the
-		new walking controller. The snapshots are taken every 0.43$s$.} 
-		\label{fig:fast_walking}
+    \caption{Overhead view of CoP tracking of Atlas walking on outdoor paved 
+		sidewalk. 
+		Planned CoP is the result of the high level trajectory planner. } 
+		\label{fig:long_walk_cop}
   \end{center}
 \end{figure}   
  

@@ -918,9 +918,9 @@ the nominal trajectory.
 The linear policy is used to generate CoM acceleration for \eref{eq:id_cart}.
 The value function approximation can be incorporated as an extra cost term 
 in ID to inject some notion of the future cost. More details can be found 
-in previous work \cite{sfeng_online,sfeng_proposal}.
+in previous work. \cite{sfeng_online,sfeng_proposal}
 \fref{fig:long_walk_cop} shows CoP tracking on of the Atlas robot walking on
-outdoor paved walkway. 
+paved sidewalk. 
 
 \subsection{Unified full body controller}
 The new walking controller no longer runs a separate IK module. 
@@ -954,9 +954,9 @@ $\tau$ is thus linearly dependent of $\ddot{q}$ and $\lambda$ as
 \label{eq:tau_sub}
 \end{equation} 
 and can be eliminated from $\QPx$ to reduce its size by almost a half for free. 
-\eref{eq:tau_sub} can substitute for $\tau$ in the cost terms and inequality 
-constraints. 
-The equality constraints are modified to the first six rows in \eref{eq:new_eom}.
+\eref{eq:tau_sub} is used in the cost terms and inequality constraints to 
+replace $\tau$. 
+The first half of \eref{eq:new_eom} is used as the equality constraints.
 
 \begin{figure} 
   \begin{center}

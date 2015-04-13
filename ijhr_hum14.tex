@@ -151,30 +151,36 @@ and convex optimization is used to handle constraints and solve for controls
 that best track the reference motions. 
 Although detailed formulations differ, most active research has converged to 
 formulating the floating base inverse dynamics as a QP problem. 
-Hierarchical approaches \cite{eth_id,Hutter01052014,alex_hir,saab_fast_hir_qp,deLasa_hir,wensing_hir,sentis_wbc}
+Hierarchical approaches \cite{eth_id,Hutter01052014,alex_hir,saab_fast_hir_qp,deLasa_hir,wensing_hir}
 are used to resolve redundant degrees of freedom in humanoid robots. 
 These approaches typically ensure low priority objectives are within the null
 space of higher priority ones. 
+Another hierarchical framework \cite{sentis_com_virtual_linkage,sentis_wbc} 
+is designed for humanoid robots to handle constraints and objectives using 
+virtual linkages. 
 We prefer using soft costs as opposed to hard constraints for better numerical 
 stability especially in situations where no feasible solutions exist for the 
 specified objectives.
 There is also much interest in formulating a smaller QP problem to reduce 
 computation time. Contact wrenches can be removed from the
-equations of motion using orthogonal decomposition \cite{usc_id1}.
+equations of motion using orthogonal decomposition. \cite{usc_id1}
 Ott et al. \cite{ott_force_alloc} use simple PD servos to generate a 
 desired net ground reaction wrench, which is then distributed among predefined 
 contacts using optimization.
-Ramos et al. \cite{ramos_dyn_walking} solve a smaller QP with decoupled dynamics. 
-Lee et al. \cite{lee_separate_grf} present a two level optimization setup. 
-The first level optimizes individual ground reaction wrenches and center of pressure
-(CoP) for each contact and the resulting admissible change in centroidal momenta. 
-Then another least square problem is solved for the state acceleration. 
+Decoupled dynamics are used to speed up inverse dynamics calculations by 
+Ramos et al. and Mansard. \cite{ramos_dyn_walking,mansard_decoupled}
+Lee et al. \cite{lee_separate_grf} present a two level optimization setup, 
+where the first level performs force allocation, and the second solves for 
+state acceleration. 
 Joint torques are generated explicitly. 
 Koolen et al. \cite{ihmc_vrc} generate desired centroidal momenta change based 
 on instantaneous capture point, and uses QP to optimize for acceleration and 
 contact wrenches. Joint torques are then generated with explicit inverse dynamics. 
 A novel QP solver is implemented by Kuindersma et al. \cite{scott_qp} to exploit
 the observation that inequality constraints rarely change in this context.
+Without using constrained optimization, a novel approach by 
+Moro et al. \cite{moro_attractor} generates full body torques with a combination 
+of gravity compensation and task dependent attractors.
 
 During the DRC Trials, we continued to use the same approach to ID that was 
 previously developed in our group \cite{stephens_thesis,whitman_thesis,sfeng_online} 
@@ -199,9 +205,12 @@ Similar to ID, our IK was also formulated as a QP, where the unknowns are the
 generalized velocities, $\dot{q}$, of the floating base and all the joints. 
 At each time step, we solved for $\dot{q}$ that obeyed kinematic constraints 
 and minimized a combination of costs. $q$ was computed by integrating $\dot{q}$. 
-Our IK approach was similar in spirit to the work by Mistry et al.\cite{mistry_ik} 
+Our approach was an extension to the damped least squares method proposed by 
+Wampler and Nakamura et al. \cite{wampler_damped_ik,nakamura_ik}, and was 
+similar to the work by Mistry et al.\cite{mistry_ik} 
 Solving for $\dot{q}$ and integrating to obtain $q$ was the primary difference
-between our approach and most traditional IK approaches \cite{kajita03,asimo}. 
+between our approach and most traditional IK approaches 
+\cite{kajita03,asimo,hrp2}. 
 The incremental method can get stuck in local minima, but faster computation
 is more suitable for real time control purposes. 
 This formulation also fitted nicely with the tel-operation heavy paradigm we 

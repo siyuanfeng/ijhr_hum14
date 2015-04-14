@@ -1,0 +1,4 @@
+epspdf $1.eps
+greypdf $1.pdf
+mv $1-gray.pdf $1_gray.pdf
+pdf2eps $1_gray.pdf

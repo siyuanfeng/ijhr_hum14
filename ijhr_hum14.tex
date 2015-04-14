@@ -25,6 +25,7 @@
 \newcommand{\sref}[1] {Section \ref{#1}}
 \newcommand{\QPx}{\mathcal{X}}
  
+\usepackage{times}
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -977,6 +978,109 @@ The first half of \eref{eq:new_eom} is used as the equality constraints.
   \end{center}
 \end{figure}   
  
+ 
+\subsection{CoM Offset Kalman Filter}
+The modeling error on the robot CoM can be modeled by an offset. If we assume the offset is changing relatively slowly, then its first and second order time derivatives are both close to zero. We formulate the CoM offset estimator as a Kalman filter. It predicts the robot CoM position, velocity and offset in the horizontal plane. 
+%The state vector for the CoM offset estimator is given by $ x =[x_{com}, \dot{x}_{com}, x_{offset}]^T$. 
+We consider the CoP as an input to our state estimator. The process model uses the LIPM dynamics to predict the CoM acceleration, given by \eref{eq:me-lipm}
+\begin{align}
+ \ddot{x}_{com} = \dfrac{g}{z_{com}} (x_{com} + x_{offset} - u_{cop}) \label{eq:me-lipm}
+\end{align}       
+$x_{com}$, $\dot{x}_{com}$ and $\ddot{x}_{com}$ are the position, velocity and acceleration of the CoM respectively. $x_{offset}$ is the CoM offset, and $u_{cop}$ is the total center of pressure. They are all expressed in the world coordinates, and have a dimension of two (both $x$ and $y$ components). $g$ is gravity. $z_{com}$ is the height of CoM relative to the CoP, it is computed every time step by forward kinematics. The Kalman filter becomes time variant due to $z_{com}$ being a parameter in the state matrix.
+%$A$ in \eref{eq:me-AB}.  
+%The process model of the Kalman filter follow \eref{eq:kfproc}. It has the following parameters:
+%\begin{align}
+%A = \left[
+%\begin{array}{ccc}
+%\I + \dfrac{1}{2} \dfrac{g}{z_{com}} \Delta t^2  & \Delta t & \dfrac{1}{2} \dfrac{g}{z_{com}} \Delta t^2 \\ 
+%\dfrac{g}{z_{com}} \Delta t  & \I & \dfrac{g}{z_{com}} \Delta t \\
+%0 & 0 & \I
+%\end{array}
+%\right]
+%\end{align}
+%\begin{align}
+%B = \left[
+%\begin{array}{c}
+%-\dfrac{1}{2} \dfrac{g}{z_{com}} \Delta t^2 \\
+%-\dfrac{g}{z_{com}} \Delta t \\ 
+%0
+%\end{array}
+%\right]
+%\label{eq:me-AB}
+%\end{align}
+%where $\Delta t$ is the time step. 
+
+The observation model provides predicted measurement from states. The CoM offset estimator uses $x_{com}$ and $\ddot{x}_{com}$ as its predicted measurement. 
+%The measurement equation can be written as 
+%\begin{align}
+%y_k = \left[
+%\begin{array}{c}
+%x_{com} \\
+%\ddot{x}_{com}
+%\end{array}
+%\right] =
+%\left[
+%\begin{array}{c}
+%x_{com} \\
+%\frac{g}{z_{com}} (x_{com} + x_{offset} - u_{cop})
+%\end{array}
+%\right]
+%\end{align} 
+%where the output matrix $C$ is given by
+%\begin{align}
+%C = \left[
+%\begin{array}{ccc}
+%\I & 0 & 0 \\
+%\dfrac{g}{z_{com}} & 0 & \dfrac{g}{z_{com}}
+%\end{array}
+%\right]
+%\label{eq:me-C}
+%\end{align}
+
+The measurement depends on sensors available to the robot. We use sensed joint position with forward kinematics to compute CoM position. 
+%The root variables are estimated using the base state estimator introduced in Section~\ref{subsec:decouple-bse}.
+Ideally, 6-axis force/torque sensors under the robot feet provide information about external forces, which can be used to calculate the CoM acceleration in the horizontal plane. However, using 3-axis force/torque sensors on the Atlas, we can only compute the CoP in the foot frames. The CoM acceleration is approximated by transforming the measured pelvis IMU acceleration to the location of the CoM. It assumes that the CoM is on the same rigid body (pelvis) as the IMU. The transformation is given by:
+\begin{align}
+a_{com} = a_{imu} + \omega_{imu}\times(\omega_{imu}\times r) + \dot{\omega}_{imu} \times r
+\label{eq:me-comdd}
+\end{align}
+where $a_{com}$ is the approximated CoM acceleration. $a_{imu}$ and $\omega_{imu}$ are IMU measured acceleration and angular velocity expressed in the world frame. $r$ is the vector from IMU to CoM computed using forward kinematics. $\dot{\omega}_{imu}$ is angular acceleration of the IMU, it is computed by finite differentiating $\omega_{imu}$. The $x$ and $y$ component of $a_{com}$ are used as measurement. The filter noise parameters are summarized in Table~\ref{T:me-Param}.
+\begin{table} [h!]
+\renewcommand{\arraystretch}{1.3}
+\caption{COM offset Kalman filter noise parameters}
+\label{T:me-Param}
+\begin{center}
+\begin{tabular}{c|c|c|c}\hline
+{} & $ x_{com}$ & $\dot{x}_{com}$  & $x_{offset}$ \\\hline\hline
+Q  & $1e^{-10}$ & $1e^{-4}$ & $1e^{-10}$ \\\hline
+\end{tabular}
+%\end{center} 
+%\vspace{0.5em}
+%\begin{center}
+%\newline
+\quad
+\begin{tabular}{c|c|c}\hline
+{} & $x_{com}$ & $\ddot{x}_{com}$ \\\hline\hline
+R & $1e^{-6}$ & $1e^{-3}$ \\\hline 
+\end{tabular}
+\end{center} 
+\end{table}
+
+\begin{figure}
+  \begin{center}
+  \subfigure[CoM offset]
+  {\includegraphics[width=0.45\textwidth]{./images/offset_gray.eps} \label{subfig:comoff}}
+  \subfigure[CoM Velocity]
+  {\includegraphics[width=0.45\textwidth]{./images/comd_gray.eps} \label{subfig:comd}}
+  
+  \caption{In the above plots, the Atlas robot takes several steps forward. Left figure shows estimated CoM offset, and the difference between CoM and CoP after applying CoM offset during static walk, shaded region is double support. Right figure shows CoM velocity computed from CoM offset estimator and forward kinematics} 
+  \label{fig:comoff} 
+  \end{center}
+\end{figure}
+
+Fig.~\ref{subfig:comoff} shows the estimated CoM offset, and the difference between CoM and CoP considering the CoM offset. If the robot is under a static configuration, the difference between corrected CoM and CoP should be zero. When the CoM is accelerating, LIPM dynamics explains the difference. We observe near zero difference in single support, and large differences during double support when the robot shift weights. Fig.~\ref{subfig:comd} shows the CoM velocity from the Kalman filter, and from forward kinematics. The CoM velocity from forward kinematics has noise injected from the measured IMU angular velocity, and occasional spikes from the left shoulder and wrist pitch joints. The estimated CoM velocity has lower noise level compared to that computed from forward kinematic.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion and future work}

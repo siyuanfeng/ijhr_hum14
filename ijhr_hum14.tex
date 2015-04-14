@@ -52,7 +52,12 @@
   University, 5000 Forbes Avenue, Pittsburgh, PA 15213, USA \\
 	sfeng@cs.cmu.edu}
 
-\author{Eric Whitman}
+\author{Eric Whitman
+\footnote{The work reported here was performed while Dr. Whitman was 
+a student/post-doc in the Robotics Institute at Carnegie Mellon 
+University.  
+He is currently a robotics engineer at Boston Dynamics / Google.
+}}
 \address{
 	Boston Dynamics / Google, 78 Fourth Avenue, Waltham, MA 02451, USA \\
 	ewhitman@bostondynamics.com}
@@ -116,7 +121,8 @@ constraints.
     {\includegraphics[width=0.4\textwidth]{images/sys.eps}}
     \caption{
       The task dependent high level controller generates a set of desired 
-      objectives such as CoM or limb motion, and constraints such as CoP and 
+      objectives such as center of mass or limb motion, 
+			and constraints such as center of pressure and 
       joint limits. The proposed full body controller, which is contained by
       the dashed rectangle, takes the high level objectives and robot states 
       $(q,\dot{q})$ as inputs and outputs position $q_{IK}$, velocity 
@@ -150,10 +156,10 @@ operational space formulation \cite{khatib_op_space_ctrl}.
 Within this broad category, reference motions in task space are specified, 
 and convex optimization is used to handle constraints and solve for controls
 that best track the reference motions. 
-Although detailed formulations differ, most active research has converged to 
+Although detailed formulations differ, much research has converged to 
 formulating the floating base inverse dynamics as a QP problem. 
-Hierarchical approaches \cite{eth_id,Hutter01052014,alex_hir,saab_fast_hir_qp,deLasa_hir,wensing_hir}
-are used to resolve redundant degrees of freedom in humanoid robots. 
+Hierarchical approaches are used to resolve redundant degrees of freedom in 
+humanoid robots \cite{eth_id,Hutter01052014,alex_hir,saab_fast_hir_qp,deLasa_hir,wensing_hir}. 
 These approaches typically ensure low priority objectives are within the null
 space of higher priority ones. 
 Another hierarchical framework \cite{sentis_com_virtual_linkage,sentis_wbc} 
@@ -164,24 +170,25 @@ stability especially in situations where no feasible solutions exist for the
 specified objectives.
 There is also much interest in formulating a smaller QP problem to reduce 
 computation time. Contact wrenches can be removed from the
-equations of motion using orthogonal decomposition. \cite{usc_id1}
-Ott et al. \cite{ott_force_alloc} use simple PD servos to generate a 
-desired net ground reaction wrench, which is then distributed among predefined 
-contacts using optimization.
+equations of motion using orthogonal decomposition \cite{usc_id1}.
+Ott et al. use simple PD servos to generate a desired net ground reaction 
+wrench, which is then distributed among predefined contacts using 
+optimization \cite{ott_force_alloc}.
 Decoupled dynamics are used to speed up inverse dynamics calculations by 
-Ramos et al. and Mansard. \cite{ramos_dyn_walking,mansard_decoupled}
-Lee et al. \cite{lee_separate_grf} present a two level optimization setup, 
+Ramos et al. and Mansard \cite{ramos_dyn_walking,mansard_decoupled}.
+Lee et al. present a two level optimization setup, 
 where the first level performs force allocation, and the second solves for 
-state acceleration. 
-Joint torques are generated explicitly. 
-Koolen et al. \cite{ihmc_vrc} generate desired centroidal momenta change based 
-on instantaneous capture point, and uses QP to optimize for acceleration and 
-contact wrenches. Joint torques are then generated with explicit inverse dynamics. 
-A novel QP solver is implemented by Kuindersma et al. \cite{scott_qp} to exploit
-the observation that inequality constraints rarely change in this context.
+state acceleration \cite{lee_separate_grf}.
+Koolen et al. generate desired centroidal momenta change based on the 
+instantaneous capture point, and use QP to optimize for acceleration and 
+contact wrenches. Joint torques are then generated with explicit inverse 
+dynamics \cite{ihmc_vrc}. 
+A novel QP solver is implemented by Kuindersma et al. to exploit
+the observation that inequality constraints rarely change in this 
+context \cite{scott_qp}.
 Without using constrained optimization, a novel approach by 
-Moro et al. \cite{moro_attractor} generates full body torques with a combination 
-of gravity compensation and task dependent attractors.
+Moro et al. generates full body torques with a combination 
+of gravity compensation and task dependent attractors \cite{moro_attractor}.
 
 During the DRC Trials, we continued to use the same approach to ID that was 
 previously developed in our group \cite{stephens_thesis,whitman_thesis,sfeng_online} 
@@ -190,7 +197,7 @@ Bouyarmane et al. \cite{bouyarmane_vrc}
 We optimized for acceleration, torque, and contact wrenches simultaneously 
 on the full robot model. This design choice was intuitive, and gave us the
 most flexibility in terms of trading off directly among physical quantities
-of interest. Recently, we remove the explicit dependency on joint torques in
+of interest. Recently, we removed the explicit dependency on joint torques in
 ID using the decoupling presented by Herzog, et al. \cite{alex_hir} to speedup
 computation.
 %It also provides an easy way to properly manage all constraints on 
@@ -200,8 +207,6 @@ computation.
 ID does not generate $q_d$ or $\dot{q}_d$ directly for \eref{eq:servo}.
 For the DRC Trials, we introduced a separate inverse kinematics (IK) controller to
 explicitly compute these kinematic references. 
-For more dynamic behaviors, our recent work prefers integrating the acceleration
-computed by ID into desired velocity that properly obeys dynamic constraints.  
 Similar to ID, our IK was also formulated as a QP, where the unknowns are the 
 generalized velocities, $\dot{q}$, of the floating base and all the joints. 
 At each time step, we solved for $\dot{q}$ that obeyed kinematic constraints 
@@ -214,12 +219,12 @@ between our approach and most traditional IK approaches
 \cite{kajita03,asimo,hrp2}. 
 The incremental method can get stuck in local minima, but faster computation
 is more suitable for real time control purposes. 
-This formulation also fitted nicely with the tel-operation heavy paradigm we 
+This formulation also fitted nicely with the teleoperation paradigm we 
 adopted for the DRC Trials. 
 
-The main contribution of this work is the successful application to a physical 
-system and many modifications of existing techniques, as well as 
-the lessons learned and intellectual challenges from this effort. 
+The main contribution of this work is the successful application of our approach 
+to a physical system and many modifications of existing techniques, 
+as well as the lessons learned and intellectual challenges from this effort. 
 The remainder of this paper is arranged as follows. 
 \sref{sec:fbc} provides a brief description of the common formulation for 
 our ID and IK controller, which are then detailed in \sref{sec:ID} and \sref{sec:IK}
@@ -816,8 +821,8 @@ only the final placement of the hands and feet controlled by the operator.
 climbing the ladder. 
 CoM and limb trajectories from the actual run during the DRC Trials are 
 plotted in \fref{fig:ladder_data}. 
-Hand or foot was automatically moved to approximately the desired position by 
-placing it relative to the other hand or foot. 
+The repositioning hand or foot was automatically moved to approximately 
+the desired position by placing it relative to the other hand or foot. 
 Then, the operator precisely placed the limb with 1$cm$ increments using 
 ``nudge'' commands. 
 The correct vertical height was found automatically, using force sensors to 
@@ -892,8 +897,8 @@ the underlying dynamic constraints.
 
 Since the DRC trials, we have developed a new controller based on previous 
 work that is capable of more dynamic walking on the Atlas robot. 
-The new walking controller is able to achieve 1.7$s$ cadence and 0.4$m$
-step length as shown in \fref{fig:fast_walking}. 
+The new walking controller is able to achieve 0.235$m/s$ walking speed 
+with 0.4$m$ step length as shown in \fref{fig:fast_walking}. 
 The new approach consists of a high level trajectory optimizer that generates
 reference CoM and swing foot trajectories using the desired footsteps at a low
 frequency, and a full body controller that tracks the reference trajectories 
@@ -928,7 +933,7 @@ The new walking controller no longer runs a separate IK module.
 Lower body joint level servos consist of only velocity and torque feedback 
 loops. 
 The desired torque comes straight from the output of ID, and the desired 
-velocity is leaky integrated by
+velocity is integrated leakily by
 \begin{equation}
   \dot{q}_d = \alpha (\dot{q}_d + \ddot{q}_d dt) + (1-\alpha) \dot{q},
 	\label{eq:qd_int}
@@ -962,7 +967,7 @@ The first half of \eref{eq:new_eom} is used as the equality constraints.
 \begin{figure} 
   \begin{center}
     {\includegraphics[width=1\textwidth]{images/fast_walking.eps}}
-    \caption{Atlas walks with 1.7$s$ cadence and 0.4$m$ step length with the
+    \caption{Atlas walks at 0.235$m/s$ with 0.4$m$ step length using the
 		new walking controller. The snapshots are taken every 0.43$s$.} 
 		\label{fig:fast_walking}
   \end{center}
@@ -1091,8 +1096,9 @@ for the swing leg and arms.
 For most joints on the Atlas robot, there is about 10$Nm$ friction, which is
 on the same order of torques for tracking joint trajectories when no external
 force is applied.
-In addition, joint torques are measured by the pressure difference across piston 
-chambers, even with an accurate mass model and perfect torque tracking, we still
+In addition, joint torque is measured by the pressure difference across the
+piston. 
+Even with an accurate mass model and perfect torque tracking, we still
 need to explicitly compensate for friction to achieve good motion tracking.
 Hence, some form of kinematics based control is necessary for the lightly loaded
 joints, such as those on the swing leg and arms.
@@ -1116,7 +1122,7 @@ approach that relied on a separate IK module.
 
 For the DRC Trials, our static approached allowed us to use various integrators to 
 compensate for modeling errors easily. 
-Being slow also mitigated the effects of all kinds of delays in the system. 
+Being slow also mitigated the effects of delays in the system. 
 In the current fast walking controller development, we are exploring ways to 
 directly compensate CoP tracking delays in the simple point mass model we use 
 for CoM trajectory generation. 
@@ -1160,7 +1166,7 @@ real hardware deployment possible.
 The combined low level controller abstracted away the details about the physical 
 system and provided mechanisms to realize and trade off among potentially 
 conflicting objectives while obeying various constraints. 
-For more dynamic behaviors, our recent development favors an unified full body
+For more dynamic behaviors, our recent development favors a unified full body
 controller that integrates the accelerations from the ID results to generate 
 kinematic references instead of a separate IK module.
 On the other hand, for more static tasks such as manipulation, the original 
